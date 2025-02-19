@@ -20,8 +20,8 @@ import { Bell, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const MonthDetails = () => {
-  const { monthId } = useParams(); // Get the month ID from the URL
-  const decodedMonthId = decodeURIComponent(monthId || ""); // Decode the URL parameter safely
+  const { monthId } = useParams();
+  const decodedMonthId = decodeURIComponent(monthId || ""); 
 
   const month = pregnancyData.find((m) => m.slug === decodedMonthId);
 
@@ -76,7 +76,6 @@ const MonthDetails = () => {
         </div>
       </header>
       <div className="relative flex flex-col justify-center items-center">
-  {/* Image */}
   <img
     className="w-full"
     src={
@@ -98,15 +97,13 @@ const MonthDetails = () => {
         ? month8
         : ""
     }
-    alt={`Month ${month.details.title}`} // Add alt text for accessibility
+    alt={`Month ${month.details.title}`} 
   />
 
-  {/* Title */}
   <h1 className="absolute top-0 right-0 bg-[#FFCFFA] text-xl md:text-3xl font-light w-32 md:w-40 shadow-inner text-center rounded-3xl py-2 md:py-3 text-blue-500 before:absolute before:inset-0 before:rounded-3xl before:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.2)]">
     {month.details.title}
   </h1>
 
-  {/* Week Details */}
   <p className="mb-6 bg-gradient-to-r from-[#FFCFFA] to-[#CBF3FF] rounded-2xl font-light px-4 md:px-5 py-6 md:py-8 text-center text-xl md:text-3xl w-[90%] md:w-[95%] -mt-12 md:-mt-16">
     {month.details.week}
   </p>

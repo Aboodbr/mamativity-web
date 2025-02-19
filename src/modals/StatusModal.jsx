@@ -10,11 +10,11 @@ export default function StatusModal({isOpen, close, type} ) {
     <>
 
       <Dialog open={isOpen} as="div" className="relative z-10 focus:outline-none" onClose={close}>
-        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
+        <div className="fixed inset-0 z-10 w-screen backdrop-blur-lg overflow-y-auto">
+          <div className="flex min-h-full items-center  justify-center p-4">
             <DialogPanel
               transition
-              className="w-full flex justify-center items-center flex-col  md:w-[60%] rounded-xl bg-gradient-to-b from-[rgba(255,207,250,1)] to-[rgba(203,243,255,1)] p-6 backdrop-blur-2xl duration-300 ease-out data-[closed]:transform-[scale(95%)] data-[closed]:opacity-0"
+              className="w-full flex justify-center items-center flex-col  md:w-[60%] rounded-xl shadow-xl bg-gradient-to-b from-[rgba(255,207,250,1)] to-[rgba(203,243,255,1)] p-6 backdrop-blur-2xl duration-300 ease-out data-[closed]:transform-[scale(95%)] data-[closed]:opacity-0"
             >
               <img src={type === "oops" ? oops : success} />
               <DialogTitle as="h1" className={`font-bold text-4xl ${type === "oops" ? "text-red-500" : "text-green-500"}`} >

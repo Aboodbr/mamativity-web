@@ -1,3 +1,4 @@
+import { useState } from "react"; // Add useState for search functionality
 import month1 from "@/assets/month1.png";
 import month2 from "@/assets/month2.png";
 import month3 from "@/assets/month3.png";
@@ -59,17 +60,26 @@ const pregnancyMonths = [
 ];
 
 const PregnancyProblems = () => {
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+
+  // Filter pregnancy months based on search query
+  const filteredMonths = pregnancyMonths.filter((month) =>
+    month.month.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-50">
         <div className="container relative mx-auto px-4 py-3">
-          <div className="flex  justify-center">
+          <div className="flex justify-center">
             <div className="relative flex-1 max-w-xl rounded-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
               <Input
                 type="search"
                 placeholder="Search"
                 className="pl-10 py-6 rounded-full w-full shadow-lg border-none focus:ring-2 focus:ring-gray-300 text-xl placeholder:text-xl"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)} // Update search query
               />
             </div>
             <div className="flex absolute top-2 right-5 items-center gap-4 ml-4">
@@ -97,33 +107,31 @@ const PregnancyProblems = () => {
         </div>
       </header>
 
-      <h1 className="text-2xl md:text-3xl font-bold mb-8">
+      <h1 className="text-2xl md:text-3xl font-bold mb-8 px-4">
         Weekly pregnancy series
       </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {pregnancyMonths.map((month, index) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
+        {filteredMonths.map((month, index) => (
           <Link to={`/month/${month.slug}`} key={index}>
-          <div  className="group relative cursor-pointer">
-            {/* Card with gradient background */}
-            <div className="relative h-64 rounded-2xl overflow-hidden transition-transform duration-300 group-hover:transform group-hover:scale-105">
-              {/* Image container */}
-              <div className="flex flex-col items-center mx-1">
-                <div className="aspect-video relative  rounded-xl">
-                  <img
-                    src={month.image || "/placeholder.svg"}
-                    alt={month.month}
-                    className="object-cover rounded-2xl"
-                  />
-                </div>
-                <div className="bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] rounded-2xl p-4 transition-shadow w-[95%] z-10 -mt-22">
-                  <h3 className="font-bold text-xl line-clamp-2 py-3 text-center">
-                    {month.month}
-                  </h3>
+            <div className="group relative cursor-pointer">
+              <div className="relative h-64 rounded-2xl overflow-hidden transition-transform duration-300 group-hover:transform group-hover:scale-105">
+                <div className="flex flex-col items-center mx-1">
+                  <div className="aspect-video relative rounded-xl">
+                    <img
+                      src={month.image || "/placeholder.svg"}
+                      alt={month.month}
+                      className="object-cover rounded-2xl"
+                    />
+                  </div>
+                  <div className="bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] rounded-2xl p-4 transition-shadow w-[95%] z-10 -mt-22">
+                    <h3 className="font-bold text-xl line-clamp-2 py-3 text-center">
+                      {month.month}
+                    </h3>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           </Link>
         ))}
       </div>

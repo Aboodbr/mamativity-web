@@ -1,3 +1,4 @@
+import { useState } from "react"; // Add useState for search functionality
 import { Input } from "@/components/ui/input";
 import { Bell, Search } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -92,17 +93,30 @@ const FeaturedArticles = [
 ];
 
 export default function Home() {
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+
+  // Filter articles based on search query
+  const filteredLatestArticles = LatestArticles.filter((article) =>
+    article.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredFeaturedArticles = FeaturedArticles.filter((article) =>
+    article.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-50">
         <div className="container relative mx-auto px-4 py-3">
-          <div className="flex  justify-center">
+          <div className="flex justify-center">
             <div className="relative flex-1 max-w-xl rounded-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
               <Input
                 type="search"
                 placeholder="Search"
                 className="pl-10 py-6 rounded-full w-full shadow-lg border-none focus:ring-2 focus:ring-gray-300 text-xl placeholder:text-xl"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)} // Update search query
               />
             </div>
             <div className="flex absolute top-2 right-5 items-center gap-4 ml-4">
@@ -152,7 +166,6 @@ export default function Home() {
       </div>
 
       <main className="container mx-auto px-4 py-6 space-y-8">
-        {/* Latest Articles Carousel */}
         <section>
           <h2 className="text-2xl font-bold mb-4">Latest Articles</h2>
           <Swiper
@@ -167,7 +180,7 @@ export default function Home() {
             pagination={{ clickable: true }}
             className="pb-6 "
           >
-            {LatestArticles.map((article, index) => (
+            {filteredLatestArticles.map((article, index) => (
               <SwiperSlide key={index}>
                 <div className="flex flex-col items-center mx-1">
                   <div className="aspect-video relative ">
@@ -193,7 +206,6 @@ export default function Home() {
           </Swiper>
         </section>
 
-        {/* Featured Articles Carousel */}
         <section>
           <h2 className="text-2xl font-bold mb-4">Featured Articles</h2>
           <Swiper
@@ -208,7 +220,7 @@ export default function Home() {
             pagination={{ clickable: true }}
             className="pb-6"
           >
-            {FeaturedArticles.map((article, index) => (
+            {filteredFeaturedArticles.map((article, index) => (
               <SwiperSlide key={index}>
                 <div className="bg-white rounded-2xl shadow-sm hover:shadow-md ">
                   <div className=" relative">

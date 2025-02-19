@@ -13,18 +13,18 @@ import corner from "@/assets/corner.png";
 import corner2 from "@/assets/corner2.png";
 
 const links = [
-  { name: "Home", path: "/", icon: navIcon1 },
-  { name: "Months of pregnancy", path: "/months-of-pregnancy", icon: navIcon2 },
-  { name: "Pregnancy problems", path: "/pregnancy-problems", icon: navIcon3 },
-  { name: "Maternity bag", path: "/maternity-bag", icon: navIcon4 },
-  { name: "Mothers health", path: "/mothers-health", icon: navIcon5 },
-  { name: "Children and newborns", path: "/children-newborns", icon: navIcon6 },
+  { name: "Home", path: "home", icon: navIcon1 },
+  { name: "Months of pregnancy", path: "months-of-pregnancy", icon: navIcon2 },
+  { name: "Pregnancy problems", path: "pregnancy-problems", icon: navIcon3 },
+  { name: "Maternity bag", path: "maternity-bag", icon: navIcon4 },
+  { name: "Mothers health", path: "mothers-health", icon: navIcon5 },
+  { name: "Children and newborns", path: "children-newborns", icon: navIcon6 },
   {
     name: "Children's vaccinations",
-    path: "/childrens-vaccinations",
+    path: "childrens-vaccinations",
     icon: navIcon7,
   },
-  { name: "Breastfeeding", path: "/breastfeeding", icon: navIcon8 },
+  { name: "Breastfeeding", path: "breastfeeding", icon: navIcon8 },
 ];
 
 const HomeNav = ({ closeNav }) => {
@@ -77,7 +77,7 @@ const HomeNav = ({ closeNav }) => {
 
       {/* Settings Link */}
       <NavLink
-        to="/settings"
+        to="settings"
         onClick={closeNav} // Close the navigation when the settings link is clicked
         className={({ isActive }) =>
           `group flex items-center gap-5 font-semibold text-xl p-2 rounded-full transition-all absolute mx-auto bottom-8 w-full 
