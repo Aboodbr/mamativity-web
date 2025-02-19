@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+*{
+  font-family: "Playfair Display", serif;
+}
+
 
 .BG{
   background-image: url("./assets/loginBG.png");
@@ -9,6 +13,8 @@
   height: 100vh;
   
 }
+
+
 
 
 .swiper-pagination-bullet {

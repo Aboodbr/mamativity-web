@@ -1,0 +1,110 @@
+[
+  {
+    "month": "The first month",
+    "slug": "first-month",
+    "image": "month1",
+    "details": {
+      "title": "The first month",
+      "week": "The third week of pregnancy",
+      "description": "In the first month of pregnancy, it is important for the mother to take special care of her health because it plays a major role in the development of the fetus. Here are the most important tips related to vitamins, exercises, food, and drinking water.",
+      "sections": [
+        {
+          "title": "Sports exercises",
+          "content": "Light exercise is permissible provided that the mother is in good health and does not suffer from complications.",
+          "recommended": [
+            "Walking for 20-30 minutes daily.",
+            "You can do light exercises such as yoga for pregnant women. These activities help improve blood circulation and reduce stress.",
+            "Light stretching exercises to relieve stress and improve blood circulation.",
+            "Deep breathing and relaxation exercises."
+          ],
+          "avoid": [
+            "Sports that require jumping or physical contact.",
+            "Avoid strenuous exercise or heavy lifting at this stage."
+          ],
+          "videos": [
+            {
+              "title": "Yoga for Beginners",
+              "url": "https://www.youtube.com/watch?v=lhotxON97xA"
+            },
+            {
+              "title": "Relaxation Exercises",
+              "url": "https://www.youtube.com/watch?v=Hlp6cBstaZs"
+            }
+          ],
+          "tips": [
+            {
+              "title": "1. Beginners",
+              "duration": "The duration can be from 15 to 30 minutes.",
+              "description": " These sessions focus on basic movements and breathing exercises."
+            },
+            {
+              "title": "2. Intermediate level:",
+              "duration": "From 30 to 60 minutes.",
+              "description": "The sessions include more challenging exercises with a focus on flexibility and strength."
+            },
+            {
+              "title": "3. Advanced level:",
+              "duration": "Sessions reach 60-90 minutes.",
+              "description": "The focus is on complex movements and increasing mental and physical awareness."
+            },
+            {
+              "title": "4. Short sessions for meditation or relaxation:",
+              "duration": "These can be from 5 to 15 minutes, ideal during the day to relieve stress.",
+              "description": "If you are starting for the first time, it is recommended to start with a short duration and gradually increase it according to your comfort and ability"
+            }
+          ]
+        },
+        {
+          "title": "Vitamins and Supplements",
+          "content": "Taking the right vitamins and supplements is crucial for fetal development.",
+          "items": [
+            {
+              "name": "Folic Acid",
+              "description": "It is considered the most important in the first month because it reduces the risk of neural tube defects. "
+            },
+            {
+              "name": "Omega 3",
+              "description": " Improves fetal brain development."
+            },
+            {
+              "name": "Vitamin D",
+              "description": "Helps in the absorption of calcium and maintains healthy bones. "
+            },
+            {
+              "name": "Calcium",
+              "description": "Necessary for the development of bones and teeth. "
+            },
+            {
+              "name": "Iron",
+              "description": "NNecessary for transporting oxygen and forming additional blood for the fetus."
+            }
+          ]
+        },
+        {
+          "title": "Foods to Eat",
+          "content": "Such as spinach, broccoli, lentils, and citrus fruits, because folic acid is essential for the development of the fetus's nervous system.",
+          "recommended": [
+            "Fresh vegetables and fruits.",
+            "Proteins (chicken, well-cooked fish, eggs).",
+            "Whole grains (oats, brown rice).",
+            "Healthy fats (avocado, nuts)."
+          ],
+          "avoid": [
+            "Raw or undercooked foods (such as sushi and uncooked meats).",
+            "Foods high in caffeine.",
+            "Processed and packaged foods."
+          ]
+        },
+        {
+          "title": "Drink plenty of water",
+          "content": "To maintain hydration and support fetal growth.",
+          "recommended": [
+            "It is recommended to drink 8-10 glasses a day (about 2-2.5 liters), Water helps to: Prevent dehydration, Support amniotic fluid formation, Improves blood circulation, Reduce or avoid caffeine intake if possible"
+          ]
+        }
+      ]
+    }
+  }
+
+  
+]

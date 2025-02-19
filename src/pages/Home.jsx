@@ -102,7 +102,7 @@ export default function Home() {
               <Input
                 type="search"
                 placeholder="Search"
-                className="pl-10 text-2xl py-6 rounded-full w-full shadow-lg border-none focus:ring-2 focus:ring-gray-300 text-xl placeholder:text-xl"
+                className="pl-10 py-6 rounded-full w-full shadow-lg border-none focus:ring-2 focus:ring-gray-300 text-xl placeholder:text-xl"
               />
             </div>
             <div className="flex absolute top-2 right-5 items-center gap-4 ml-4">

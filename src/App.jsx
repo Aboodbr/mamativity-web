@@ -1,5 +1,5 @@
 import "./App.css";
-import { Route, Routes } from "react-router-dom"; // ❌ Remove 'Router'
+import { Route, Routes } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
 import SignUp from "./pages/SingUp";
 import SignIn from "./pages/SignIn";
@@ -13,11 +13,12 @@ import ChildrenNewborns from "./pages/ChildrenNewborns";
 import ChildrensVaccinations from "./pages/ChildrensVaccinations";
 import Breastfeeding from "./pages/Breastfeeding";
 import Settings from "./pages/Settings";
+import MonthDetails from "./pages/MonthDetails"; // New component for month details
 
 function App() {
   return (
     <Routes>
-      <Route  element={<HomeLayout />}>
+      <Route element={<HomeLayout />}>
         <Route index element={<Home />} />
         <Route path="months-of-pregnancy" element={<MonthsOfPregnancy />} />
         <Route path="pregnancy-problems" element={<PregnancyProblems />} />
@@ -27,6 +28,7 @@ function App() {
         <Route path="childrens-vaccinations" element={<ChildrensVaccinations />} />
         <Route path="breastfeeding" element={<Breastfeeding />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="month/:monthId" element={<MonthDetails />} /> {/* Dynamic route */}
       </Route>
       <Route path="/" element={<MainLayout />}>
         <Route path="about" element={<h1>About</h1>} />

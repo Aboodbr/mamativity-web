@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import {Link} from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import logo from "@/assets/logo.png"
-import StateModal from "@/modals/StatusModal"
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import logo from "@/assets/logo.png";
+import StateModal from "@/modals/StatusModal";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -14,30 +14,30 @@ export default function SignUp() {
     email: "",
     password: "",
     phone: "",
-  })
-  const [isOpen, setIsOpen] = useState(false)
+  });
+  const [isOpen, setIsOpen] = useState(false);
 
   function open() {
-    setIsOpen(true)
+    setIsOpen(true);
   }
 
   function close() {
-    setIsOpen(false)
+    setIsOpen(false);
   }
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     // Handle sign up logic here
-  }
+  };
 
   return (
-    <div className="min-h-screen p-4 md:p-6 BG">
-      <div className="max-w-md mx-auto space-y-8">
+    <div className="min-h-screen flex justify-between BG">
+      <div className="space-y-8 bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] rounded-tr-[70px] w-full md:w-[50%] pt-10">
         <div className="w-32 mx-auto">
           <img
             src={logo}
@@ -47,49 +47,82 @@ export default function SignUp() {
             className="object-contain"
           />
         </div>
-        <div className="text-center">
-          <h1 className="text-4xl font-bold">Create Account</h1>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 flex flex-col justify-center px-8 lg:px-20 pt-20"
+        >
+          <h1 className="text-blue-500 font-medium text-4xl mb-10">Sign up</h1>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                name="firstName"
+                placeholder="First Name"
+                value={formData.firstName}
+                onChange={handleChange}
+                required
+                className="bg-white border-none rounded-xl py-6 mt-2"
+              />
+              <Input
+                name="lastName"
+                placeholder="Last Name"
+                value={formData.lastName}
+                onChange={handleChange}
+                required
+                className="bg-white border-none rounded-xl py-6 mt-2"
+              />
+            </div>
             <Input
-              name="firstName"
-              placeholder="First Name"
-              value={formData.firstName}
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
               onChange={handleChange}
               required
+              className="bg-white border-none rounded-xl py-6 mt-2"
             />
-            <Input name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange} required />
+            <Input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="bg-white border-none rounded-xl py-6 mt-2"
+            />
+            <Input
+              type="tel"
+              name="phone"
+              placeholder="Phone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+              className="bg-white border-none rounded-xl py-6 mt-2"
+            />
           </div>
-          <Input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-          <Input type="tel" name="phone" placeholder="Phone" value={formData.phone} onChange={handleChange} required />
-          <Button type="submit" className="w-full bg-gradient-to-r from-blue-300 to-blue-400 hover:opacity-90" onClick={() => open()}>
+          <Button
+            type="submit"
+            className="bg-gradient-to-r cursor-pointer from-[rgba(137,221,247,1)] via-[rgba(137,221,247,1)] to-[rgba(255,255,255,1)] shadow-xl hover:shadow-lg duration-300 rounded-full py-7 font-bold text-2xl tracking-wider mt-4"
+            onClick={() => open()}
+          >
             Next
           </Button>
+          <div className="flex justify-between text-sm px-4">
+            <Link to="/signin" className="hover:underline">
+              Sign In
+            </Link>
+            <Link to="/forgot-password" className="hover:underline">
+              Forgot Password
+            </Link>
+          </div>
         </form>
-        <div className="text-center">
-          <Link to="/signin" className="text-blue-500 hover:underline">
-            Sign In
-          </Link>
-        </div>
       </div>
-      <StateModal isOpen={isOpen} close={close} type={"succes"}/>
-    </div>
-  )
-}
 
+      <div className="text-center flex justify-center items-center flex-1">
+        <h1 className="text-6xl hidden md:block font-medium">Create Account</h1>
+      </div>
+
+      <StateModal isOpen={isOpen} close={close} type={"success"} />
+    </div>
+  );
+}
