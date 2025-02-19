@@ -27,9 +27,9 @@ const links = [
   { name: "Breastfeeding", path: "/breastfeeding", icon: navIcon8 },
 ];
 
-const HomeNav = () => {
+const HomeNav = ({ closeNav }) => {
   return (
-    <nav className="bg-gradient-to-b from-[#FFCFFA] via-[#CBF3FF] to-[#CBF3FF] text-white p-4 h-screen w-[320px] fixed top-0 left-0 flex flex-col gap-3 rounded-2xl">
+    <nav className="bg-gradient-to-b from-[#FFCFFA] via-[#CBF3FF] to-[#CBF3FF] text-white p-4 h-screen w-[320px] fixed top-0 left-0 flex flex-col gap-3 rounded-2xl overflow-hidden">
       {/* Logo */}
       <NavLink to="/" className="w-full flex justify-center">
         <img className="w-28" src={logo} alt="logo" />
@@ -40,6 +40,7 @@ const HomeNav = () => {
         <NavLink
           key={link.path}
           to={link.path}
+          onClick={closeNav} // Close the navigation when a link is clicked
           className={({ isActive }) =>
             `group flex relative items-center gap-5 font-semibold text-xl pl-5 p-2 rounded-full transition-all w-[112%] 
             ${
@@ -77,6 +78,7 @@ const HomeNav = () => {
       {/* Settings Link */}
       <NavLink
         to="/settings"
+        onClick={closeNav} // Close the navigation when the settings link is clicked
         className={({ isActive }) =>
           `group flex items-center gap-5 font-semibold text-xl p-2 rounded-full transition-all absolute mx-auto bottom-8 w-full 
           ${

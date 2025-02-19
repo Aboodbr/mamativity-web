@@ -76,35 +76,41 @@ const MonthDetails = () => {
         </div>
       </header>
       <div className="relative flex flex-col justify-center items-center">
-        <img
-          className="w-full"
-          src={
-            month.image === "month1"
-              ? month1
-              : month.image === "month2"
-              ? month2
-              : month.image === "month3"
-              ? month3
-              : month.image === "month4"
-              ? month4
-              : month.image === "month5"
-              ? month5
-              : month.image === "month6"
-              ? month6
-              : month.image === "month7"
-              ? month7
-              : month.image === "month8"
-              ? month8
-              : ""
-          }
-        />
-        <h1 className="absolute top-0 right-0 bg-[#FFCFFA] text-3xl font-light mb-6 w-40 shadow-inner text-center rounded-3xl py-3 text-blue-500 before:absolute before:inset-0 before:rounded-3xl before:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.2)]">
-          {month.details.title}
-        </h1>
-        <p className="mb-6 bg-gradient-to-r from-[#FFCFFA] to-[#CBF3FF] rounded-2xl font-light px-5 py-8 text-center text-3xl w-[95%] -mt-16">
-          {month.details.week}
-        </p>
-      </div>
+  {/* Image */}
+  <img
+    className="w-full"
+    src={
+      month.image === "month1"
+        ? month1
+        : month.image === "month2"
+        ? month2
+        : month.image === "month3"
+        ? month3
+        : month.image === "month4"
+        ? month4
+        : month.image === "month5"
+        ? month5
+        : month.image === "month6"
+        ? month6
+        : month.image === "month7"
+        ? month7
+        : month.image === "month8"
+        ? month8
+        : ""
+    }
+    alt={`Month ${month.details.title}`} // Add alt text for accessibility
+  />
+
+  {/* Title */}
+  <h1 className="absolute top-0 right-0 bg-[#FFCFFA] text-xl md:text-3xl font-light w-32 md:w-40 shadow-inner text-center rounded-3xl py-2 md:py-3 text-blue-500 before:absolute before:inset-0 before:rounded-3xl before:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.2)]">
+    {month.details.title}
+  </h1>
+
+  {/* Week Details */}
+  <p className="mb-6 bg-gradient-to-r from-[#FFCFFA] to-[#CBF3FF] rounded-2xl font-light px-4 md:px-5 py-6 md:py-8 text-center text-xl md:text-3xl w-[90%] md:w-[95%] -mt-12 md:-mt-16">
+    {month.details.week}
+  </p>
+</div>
       <div className="bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] p-10 rounded-2xl">
         <p className=" mb-16 mt-5 text-center font-medium text-xl">
           {month.details.description}
