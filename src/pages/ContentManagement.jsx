@@ -20,10 +20,10 @@ export default function ContentManagement() {
   ];
 
   const topics = [
-    { id: 1, title: "(Sports exercises)" },
-    { id: 2, title: "(Vitamins and Supplements)" },
-    { id: 3, title: "(Foods rich in folic acid)" },
-    { id: 4, title: "(Drink plenty of water)" },
+    { id: 1, title: "Sports exercises" },
+    { id: 2, title: "Vitamins and Supplements" },
+    { id: 3, title: "Foods rich in folic acid" },
+    { id: 4, title: "Drink plenty of water" },
   ];
 
   // Filter months based on search term
@@ -62,7 +62,7 @@ export default function ContentManagement() {
       </div>
 
       {/* Month Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {filteredMonths.map((month) => (
           <div key={month} className="rounded-xl overflow-hidden shadow-xl">
             <Link to={`/month-${month.toLowerCase()}`}>
@@ -82,11 +82,9 @@ export default function ContentManagement() {
                       <span className="text-gray-500 mr-2">
                         Topic {topic.id}:
                       </span>
-                      <span className="p-[2px] rounded-full bg-gradient-to-r from-[#FFCFFA] to-[#CBF3FF]">
-                        <span className="bg-white rounded-full px-2 font-semibold">
+                        <span className="bg-white border border-gray-400/20 rounded-full px-1 font-semibold">
                           {topic.title}
                         </span>
-                      </span>
                     </div>
                   ))}
                 </div>
