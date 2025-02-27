@@ -25,8 +25,14 @@ const links = [
     icon: navIcon7,
   },
   { name: "Breastfeeding", path: "breastfeeding", icon: navIcon8 },
+
+  // Admin Navbar
+  { name: "Home", path: "admin/home", icon: navIcon8 },
+  { name: "User Management", path: "admin/user-management", icon: navIcon8 },
+  { name: "Content Management", path: "admin/content-management", icon: navIcon8 },
 ];
 
+// eslint-disable-next-line react/prop-types
 const HomeNav = ({ closeNav }) => {
   return (
     <nav className="bg-gradient-to-b from-[#FFCFFA] via-[#CBF3FF] to-[#CBF3FF] text-white p-4 h-screen w-[320px] fixed top-0 left-0 flex flex-col gap-3 rounded-2xl overflow-hidden">

@@ -46,22 +46,22 @@ export default function Hero() {
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10">
+      <main className="z-10">
         <div className="container mx-auto px-4 py-12">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Image Section */}
             <div className="order-2 lg:order-1  h-full">
-              <div className="relative aspect-square max-w-2xl mx-auto">
+              <div className=" aspect-square max-w-2xl mx-auto">
                 <img
                   src={heroImage}
                   alt="Peaceful sleeping baby"
-                  className="object-cover rounded-2xl h-full"
+                  className="object- absolute w-[50%] left-0 bottom-0 rounded-2xl h-auto minh-[70%]"
                 />
               </div>
             </div>
 
             {/* Text Content */}
-            <div className="order-1 lg:order-2 text-center lg:text-left">
+            <div className="order-1 lg:order-2 text-center lg:text-left bg-transparent">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
                 Welcome to{" "}
                 <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">

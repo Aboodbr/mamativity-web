@@ -1,7 +1,13 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 *{
   font-family: "Playfair Display", serif;
+}
+
+.roboto {
+  font-family: 'Roboto', sans-serif;
 }
 
 
@@ -11,11 +17,8 @@
   background-position: center;
   background-repeat: no-repeat;
   height: 100vh;
-  
+
 }
-
-
-
 
 .swiper-pagination-bullet {
   background-color: #f580ba !important; 
@@ -25,7 +28,6 @@
 .swiper-pagination-bullet-active {
   background-color: #f14099 !important; 
 }
-
 
 .swiper-button-next,
 .swiper-button-prev {
@@ -45,15 +47,6 @@
 .swiper-pagination {
   bottom: -5px !important; 
 }
-
-
-
-
-
-
-
-
-
 
 /* @layer base {
   :root {
@@ -113,6 +106,24 @@
 @layer base {
   * {
     @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+} */
+
+/* @layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+} */
+
+/* @layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
