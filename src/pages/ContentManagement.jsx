@@ -5,6 +5,7 @@ import SearchNav from "@/components/SearchNav";
 
 export default function ContentManagement() {
   const [activeTab, setActiveTab] = useState("pregnancy");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const months = [
     "First",
@@ -25,9 +26,15 @@ export default function ContentManagement() {
     { id: 4, title: "(Drink plenty of water)" },
   ];
 
+  // Filter months based on search term
+  const filteredMonths = months.filter((month) =>
+    month.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <SearchNav />
+      <SearchNav onSearch={setSearchTerm} />
+
       {/* Tabs */}
       <div className="flex space-x-4 mb-8">
         <button
@@ -56,10 +63,9 @@ export default function ContentManagement() {
 
       {/* Month Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {months.map((month) => (
+        {filteredMonths.map((month) => (
           <div key={month} className="rounded-xl overflow-hidden shadow-xl">
-            {/* Card with gradient border */}
-            <Link to={`month-${month}`}>
+            <Link to={`/month-${month.toLowerCase()}`}>
               <div className="bg-white rounded-xl overflow-hidden">
                 <div className="text-center font-medium text-gray-700 rounded-t-lg p-[3px] bg-gradient-to-r from-[#FFCFFA] to-[#CBF3FF]">
                   <div className="bg-white rounded-t-lg py-2 px-4">
@@ -71,10 +77,10 @@ export default function ContentManagement() {
                   {topics.map((topic) => (
                     <div
                       key={topic.id}
-                      className=" flex items-center rounded-md p-2 text-sm text-gray-600"
+                      className="flex items-center rounded-md p-2 text-sm text-gray-600"
                     >
                       <span className="text-gray-500 mr-2">
-                        Topic {topic.id}:{" "}
+                        Topic {topic.id}:
                       </span>
                       <span className="p-[2px] rounded-full bg-gradient-to-r from-[#FFCFFA] to-[#CBF3FF]">
                         <span className="bg-white rounded-full px-2 font-semibold">
