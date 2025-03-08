@@ -1,44 +1,76 @@
-/* eslint-disable react/prop-types */
+import { useState, useEffect } from "react";
+import { db } from "@/firebase"; // تأكد أن `firebase.js` يحتوي على `db`
+import { collection, onSnapshot } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-const users = [
-  {
-    name: "Manar Ali",
-    type: "woman",
-    phone: "01087985507",
-    email: "john@microsoft.com",
-    country: "Egypt",
-    status: "Active",
-  },
-  {
-    name: "Ahmed Mohamed",
-    type: "man",
-    phone: "01012345678",
-    email: "ahmed@gmail.com",
-    country: "Egypt",
-    status: "Inactive",
-  },
-  // Add more users...
-];
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export function UsersList({ searchQuery }) {
-  
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.phone.includes(searchQuery)
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, "users"),
+      (snapshot) => {
+        const usersData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          firstName: doc.data().firstName || "Unknown",
+          lastName: doc.data().lastName || "User",
+          email: doc.data().email || "No Email",
+          phone: doc.data().phone || "No Phone",
+          createdAt: doc.data().createdAt || null, // قد يكون غير موجود
+          country: "Egypt", // قيمة ثابتة
+          status: "Active", // قيمة ثابتة
+        }));
+
+        console.log("Fetched users:", usersData); // عرض البيانات في الكونسول
+        setUsers(usersData);
+      },
+      (error) => {
+        console.error("Error fetching users:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  const filteredUsers = users.filter(
+    (user) =>
+      (
+        user.firstName.toLowerCase() +
+        " " +
+        user.lastName.toLowerCase()
+      ).includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.phone.includes(searchQuery)
   );
 
   return (
-    <div className="">
+    <div>
       <h1 className="text-2xl font-bold mb-6 mt-7">Users List</h1>
+
+      {/* أزرار التحكم */}
       <div className="flex gap-3 flex-wrap">
-        <Button variant="outline" className="rounded-full bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] border-none px-5 py-5">
+        <Button className="rounded-full bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] px-5 py-5">
           Edit data
         </Button>
-        <Button variant="outline" className="rounded-full bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] border-none px-5 py-5">
+        <Button className="rounded-full bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] px-5 py-5">
           Account deactivation
+        </Button>
+        <Button className="rounded-full bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] px-5 py-5">
+          Activate account
+        </Button>
+        <Button className="rounded-full bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] px-5 py-5">
+          Send direct notifications
+        </Button>
+        <Button className="rounded-full bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] px-5 py-5">
+          Delete account
         </Button>
       </div>
 
@@ -49,7 +81,7 @@ export function UsersList({ searchQuery }) {
           <TableHeader>
             <TableRow className="border-gray-400/50 font-bold tracking-wider text-black/90">
               <TableHead className="py-5">Name</TableHead>
-              <TableHead>User type</TableHead>
+              <TableHead>Created At</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Country</TableHead>
@@ -59,16 +91,31 @@ export function UsersList({ searchQuery }) {
           <TableBody>
             {filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
-                <TableRow key={user.email} className="border-gray-400/50 font-bold tracking-wider text-black/90">
-                  <TableCell className="py-5">{user.name}</TableCell>
-                  <TableCell>{user.type}</TableCell>
+                <TableRow
+                  key={user.id}
+                  className="border-gray-400/50 font-bold tracking-wider text-black/90"
+                >
+                  <TableCell className="py-5">
+                    {user.firstName} {user.lastName}
+                  </TableCell>
+                  <TableCell>
+                    {user.createdAt && user.createdAt.seconds
+                      ? new Date(
+                          user.createdAt.seconds * 1000
+                        ).toLocaleDateString()
+                      : "N/A"}
+                  </TableCell>
                   <TableCell>{user.phone}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.country}</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold ${
-                      user.status === "Active" ? "bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] border-none px-5 py-2" : "bg-red-100 text-red-800 px-4 py-2"
-                    }`}>
+                    <span
+                      className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold ${
+                        user.status === "Active"
+                          ? "bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF]"
+                          : "bg-red-100 text-red-800 px-4 py-2"
+                      }`}
+                    >
                       {user.status}
                     </span>
                   </TableCell>
@@ -87,3 +134,8 @@ export function UsersList({ searchQuery }) {
     </div>
   );
 }
+import PropTypes from "prop-types";
+
+UsersList.propTypes = {
+  searchQuery: PropTypes.string.isRequired, // تأكد من أن searchQuery هو نصي وإجباري
+};

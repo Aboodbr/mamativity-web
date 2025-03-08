@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo.png";
 import StateModal from "@/modals/StatusModal";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "@/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function SignUp() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -16,6 +20,8 @@ export default function SignUp() {
     phone: "",
   });
   const [isOpen, setIsOpen] = useState(false);
+  const [modalType, setModalType] = useState("success");
+  const [modalMessage, setModalMessage] = useState("");
 
   function open() {
     setIsOpen(true);
@@ -30,9 +36,42 @@ export default function SignUp() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle sign up logic here
+    try {
+      // إنشاء الحساب في Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+      const user = userCredential.user;
+      console.log("User Created:", user);
+
+      // تخزين البيانات في Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        firstName: formData.firstName,
+        phone: formData.phone,
+        email: formData.email,
+        createdAt: new Date(),
+        role: "user",
+      });
+
+      // عرض رسالة النجاح
+      setModalType("success");
+      setModalMessage("Your account has been created successfully.");
+      open();
+
+      // الانتقال إلى الصفحة الرئيسية بعد ثانيتين
+      setTimeout(() => {
+        navigate("/home");
+      }, 2000);
+    } catch (error) {
+      console.error("Error:", error.message);
+      setModalType("error");
+      setModalMessage(error.message);
+      open();
+    }
   };
 
   return (
@@ -103,7 +142,6 @@ export default function SignUp() {
           <Button
             type="submit"
             className="bg-gradient-to-r cursor-pointer from-[rgba(137,221,247,1)] via-[rgba(137,221,247,1)] to-[rgba(255,255,255,1)] shadow-xl hover:shadow-lg duration-300 rounded-full py-7 font-bold text-2xl tracking-wider mt-4"
-            onClick={() => open()}
           >
             Next
           </Button>
@@ -122,7 +160,12 @@ export default function SignUp() {
         <h1 className="text-6xl hidden md:block font-medium">Create Account</h1>
       </div>
 
-      <StateModal isOpen={isOpen} close={close} type={"success"} />
+      <StateModal
+        isOpen={isOpen}
+        close={close}
+        type={modalType}
+        message={modalMessage}
+      />
     </div>
   );
 }

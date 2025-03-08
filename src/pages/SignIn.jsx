@@ -1,27 +1,52 @@
 "use client";
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { signInWithEmailAndPassword } from "firebase/auth"; // استيراد تسجيل الدخول
+import { auth } from "@/firebase"; // استيراد Firebase
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import StateModal from "@/modals/StatusModal";
 import logo from "@/assets/logo.png";
+import Swal from "sweetalert2";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-
-  function open() {
-    setIsOpen(true);
-  }
+  const navigate = useNavigate(); // لاستخدام التوجيه بعد تسجيل الدخول
 
   function close() {
     setIsOpen(false);
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      console.log("Logged in user:", userCredential.user); // ✅ طباعة بيانات المستخدم
+
+      Swal.fire({
+        icon: "success",
+        title: "Logged In",
+        text: "You have successfully logged in!",
+        confirmButtonText: "Proceed to Home",
+      }).then(() => {
+        navigate("/home"); // ✅ إعادة التوجيه بعد تسجيل الدخول
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Login Failed",
+        text: error.message,
+        confirmButtonText: "Try Again",
+      });
+    }
   };
 
   return (
@@ -63,7 +88,6 @@ export default function SignIn() {
           <Button
             type="submit"
             className="bg-gradient-to-r cursor-pointer from-[rgba(137,221,247,1)] via-[rgba(137,221,247,1)] to-[rgba(255,255,255,1)] shadow-xl hover:shadow-lg duration-300 rounded-full py-7 font-bold text-2xl tracking-wider mt-4"
-            onClick={() => open()}
           >
             Next
           </Button>
@@ -71,11 +95,8 @@ export default function SignIn() {
             <Link to="/signup" className=" hover:underline">
               Sign up
             </Link>
-            <Link
-              to="/forgot-password"
-              className=" hover:underline"
-            >
-              Forgot passwords
+            <Link to="/forgot-password" className=" hover:underline">
+              Forgot password?
             </Link>
           </div>
         </form>

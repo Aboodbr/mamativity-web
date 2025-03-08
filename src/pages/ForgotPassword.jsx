@@ -2,49 +2,21 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import StateModal from "@/modals/StatusModal";
 import logo from "@/assets/logo.png";
-import emailjs from "emailjs-com"; 
 import { useNavigate } from "react-router-dom";
-import { setCookie } from "@/utils/cookies";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
+import Swal from "sweetalert2";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
-//   const open = () => setIsOpen(true);
-  const close = () => setIsOpen(false);
+  const auth = getAuth();
 
   const validateEmail = (email) => {
     const regex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
     return regex.test(email);
-  };
-
-  const generateOTP = () => {
-    return Math.floor(1000 + Math.random() * 9000);
-  };
-
-  const sendOTP = async (email, otp) => {
-    try {
-      const templateParams = {
-        to_email: email,
-        otp: otp,
-      };
-
-      await emailjs.send(
-        "service_j0shqzg",
-        "template_jwbc2y7", 
-        templateParams,
-        "5eR8XMsDN1mBxKRpk" 
-      );
-
-      console.log("OTP sent successfully!");
-    } catch (error) {
-      console.error("Failed to send OTP:", error);
-      setError("Failed to send OTP. Please try again.");
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -55,11 +27,31 @@ export default function ForgotPassword() {
       return;
     }
 
-    const otp = generateOTP();
-    setCookie("otp", otp, 5);
-    await sendOTP(email, otp);
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
 
-    navigate("/verification"); 
+      //  إظهار SweetAlert بعد نجاح الإرسال
+      Swal.fire({
+        title: "Email Sent!",
+        text: "A password reset link has been sent to your email.",
+        icon: "success",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#3085d6",
+      }).then(() => {
+        navigate("/signin"); //  تحويل المستخدم إلى تسجيل الدخول
+      });
+    } catch (error) {
+      Swal.fire({
+        title: "Error!",
+        text: error.message,
+        icon: "error",
+        confirmButtonText: "Try Again",
+        confirmButtonColor: "#d33",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -96,9 +88,10 @@ export default function ForgotPassword() {
           </div>
           <Button
             type="submit"
+            disabled={loading}
             className="bg-gradient-to-r cursor-pointer from-[rgba(137,221,247,1)] via-[rgba(137,221,247,1)] to-[rgba(255,255,255,1)] shadow-xl hover:shadow-lg duration-300 rounded-full py-7 font-bold text-2xl tracking-wider mt-4"
           >
-            Next
+            {loading ? "Sending..." : "Send Reset Email"}
           </Button>
           <div className="flex justify-between text-sm px-4">
             <Link to="/signin" className="hover:underline">
@@ -116,8 +109,6 @@ export default function ForgotPassword() {
           Forget Password
         </h1>
       </div>
-
-      <StateModal isOpen={isOpen} close={close} type={"oops"} />
     </div>
   );
 }

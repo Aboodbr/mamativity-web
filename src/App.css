@@ -1,51 +1,43 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
-
-*{
+* {
   font-family: "Playfair Display", serif;
 }
 
-.roboto {
-  font-family: 'Roboto', sans-serif;
-}
-
-
-.BG{
+.BG {
   background-image: url("./assets/loginBG.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   height: 100vh;
-
 }
 
 .swiper-pagination-bullet {
-  background-color: #f580ba !important; 
+  background-color: #f580ba !important;
   opacity: 1;
 }
 
 .swiper-pagination-bullet-active {
-  background-color: #f14099 !important; 
+  background-color: #f14099 !important;
 }
 
 .swiper-button-next,
 .swiper-button-prev {
-  color: #fd75b9 !important; 
+  color: #fd75b9 !important;
   font-size: 24px;
 }
 
 .swiper-button-next:hover,
 .swiper-button-prev:hover {
-  color: #f14099 !important; 
+  color: #f14099 !important;
 }
 
-.swiper-horizontal{
+.swiper-horizontal {
   padding-bottom: 20px !important;
 }
 
 .swiper-pagination {
-  bottom: -5px !important; 
+  bottom: -5px !important;
 }
 
 /* @layer base {
@@ -106,24 +98,6 @@
 @layer base {
   * {
     @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-} */
-
-/* @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-} */
-
-/* @layer base {
-  * {
-    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;

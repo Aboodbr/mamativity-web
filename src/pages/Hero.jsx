@@ -5,7 +5,7 @@ import heroImage from "@/assets/heroImage.png"
 
 export default function Hero() {
   return (
-    <div className="min-h-screen relative overflow-hidden bg-white">
+    <div className="min-h-screen relative overflow-hidden bg-white heroBG">
       {/* Decorative circles */}
       <div className="absolute top-40 right-20 w-32 h-32 rounded-full bg-blue-100/50 blur-2xl" />
       <div className="absolute top-60 right-40 w-24 h-24 rounded-full bg-pink-100/50 blur-2xl" />
@@ -52,11 +52,11 @@ export default function Hero() {
             {/* Image Section */}
             <div className="order-2 lg:order-1  h-full">
               <div className=" aspect-square max-w-2xl mx-auto">
-                <img
+                {/* <img
                   src={heroImage}
                   alt="Peaceful sleeping baby"
                   className="object- absolute w-[50%] left-0 bottom-0 rounded-2xl h-auto minh-[70%]"
-                />
+                /> */}
               </div>
             </div>
 
