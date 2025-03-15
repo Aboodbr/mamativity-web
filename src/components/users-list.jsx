@@ -57,19 +57,19 @@ export function UsersList({ searchQuery }) {
 
       {/* أزرار التحكم */}
       <div className="flex gap-3 flex-wrap">
-        <Button className="rounded-full bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] px-5 py-5">
+        <Button className="rounded-full bg-gradient-to-b from-[#94c3fc] to-[#CBF3FF] px-5 py-5">
           Edit data
         </Button>
-        <Button className="rounded-full bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] px-5 py-5">
+        <Button className="rounded-full bg-gradient-to-b from-[#94c3fc] to-[#CBF3FF] px-5 py-5">
           Account deactivation
         </Button>
-        <Button className="rounded-full bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] px-5 py-5">
+        <Button className="rounded-full bg-gradient-to-b from-[#94c3fc] to-[#CBF3FF] px-5 py-5">
           Activate account
         </Button>
-        <Button className="rounded-full bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] px-5 py-5">
+        <Button className="rounded-full bg-gradient-to-b from-[#94c3fc] to-[#CBF3FF] px-5 py-5">
           Send direct notifications
         </Button>
-        <Button className="rounded-full bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] px-5 py-5">
+        <Button className="rounded-full bg-gradient-to-b from-[#94c3fc] to-[#CBF3FF] px-5 py-5">
           Delete account
         </Button>
       </div>
@@ -112,7 +112,7 @@ export function UsersList({ searchQuery }) {
                     <span
                       className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold ${
                         user.status === "Active"
-                          ? "bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF]"
+                          ? "bg-gradient-to-b from-[#94c3fc] to-[#CBF3FF]"
                           : "bg-red-100 text-red-800 px-4 py-2"
                       }`}
                     >

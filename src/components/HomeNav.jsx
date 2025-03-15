@@ -81,7 +81,7 @@ const HomeNav = ({ closeNav }) => {
     userRole === "admin" ? adminLinks : userRole === "user" ? userLinks : [];
 
   return (
-    <nav className="bg-gradient-to-b from-[#FFCFFA] via-[#CBF3FF] to-[#CBF3FF] text-white p-4 h-screen w-[320px] fixed top-0 left-0 flex flex-col gap-3 rounded-2xl overflow-hidden">
+    <nav className={`bg-gradient-to-b ${userRole === "admin" ? "from-[#94c3fc] via-[#CBF3FF]/70 to-[#CBF3FF]" : "from-[#FFCFFA] via-[#CBF3FF] to-[#CBF3FF]"}  text-white p-4 h-screen w-[320px] fixed top-0 left-0 flex flex-col gap-3 rounded-2xl overflow-hidden`}>
       {/* Logo */}
       <NavLink to="/" className="w-full flex justify-center">
         <img className="w-28" src={logo} alt="logo" />

@@ -18,9 +18,10 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Verification from "./pages/Verification";
 import Hero from "./pages/Hero";
-import DashboardPage from "./pages/DashBoard";
-import UsersManagement from "./pages/UsersManagement";
-import ContentManagement from "./pages/ContentManagement";
+import DashboardPage from "./pages/admin/DashBoard";
+import UsersManagement from "./pages/admin/UsersManagement";
+import ContentManagement from "./pages/admin/ContentManagement";
+import AdminMonthDetails from "./pages/admin/AdminMonthDetails";
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
         <Route path="/admin/home"  element={<DashboardPage />} />
         <Route path="/admin/user-management"  element={<UsersManagement />} />
         <Route path="/admin/content-management"  element={<ContentManagement />} />
+        <Route path="/admin/content-management/:month"  element={<AdminMonthDetails />} />
       </Route>
 
       {/* Validation Routes  */}

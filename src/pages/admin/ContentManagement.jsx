@@ -42,7 +42,7 @@ export default function ContentManagement() {
           className={cn(
             "px-6 py-2 rounded-full text-sm font-medium transition-colors",
             activeTab === "pregnancy"
-              ? "bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] border-none"
+              ? "bg-gradient-to-b from-[#94c3fc] to-[#CBF3FF] border-none"
               : "bg-white border border-blue-200 text-gray-700 hover:bg-gray-50"
           )}
         >
@@ -53,7 +53,7 @@ export default function ContentManagement() {
           className={cn(
             "px-6 py-2 rounded-full text-sm font-medium transition-colors",
             activeTab === "childcare"
-              ? "bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] border-none"
+              ? "bg-gradient-to-b from-[#94c3fc] to-[#CBF3FF] border-none"
               : "bg-white border border-blue-200 text-gray-700 hover:bg-gray-50"
           )}
         >
@@ -65,9 +65,9 @@ export default function ContentManagement() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {filteredMonths.map((month) => (
           <div key={month} className="rounded-xl overflow-hidden shadow-xl">
-            <Link to={`/month-${month.toLowerCase()}`}>
+            <Link to={`/admin/content-management/${month}`}>
               <div className="bg-white rounded-xl overflow-hidden">
-                <div className="text-center font-medium text-gray-700 rounded-t-lg p-[3px] bg-gradient-to-r from-[#FFCFFA] to-[#CBF3FF]">
+                <div className="text-center font-medium text-gray-700 rounded-t-lg p-[3px] bg-gradient-to-r from-[#94c3fc] to-[#CBF3FF]">
                   <div className="bg-white rounded-t-lg py-2 px-4">
                     {month} month
                   </div>
