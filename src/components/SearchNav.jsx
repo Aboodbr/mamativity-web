@@ -1,14 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, Search } from "lucide-react";
 import { Input } from "./ui/input";
+import { auth, db } from "@/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 const SearchNav = ({ onSearch }) => {
   const [query, setQuery] = useState("");
+  const [firstName, setFirstName] = useState(""); // الاسم الأول فقط
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            setFirstName(userDoc.data().firstName); // حفظ الاسم
+          }
+        } catch (error) {
+          console.error("خطأ أثناء جلب الاسم:", error);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleSearchChange = (event) => {
     const value = event.target.value;
     setQuery(value);
-    onSearch(value); // Pass search query to parent component
+    onSearch(value);
   };
 
   return (
@@ -41,8 +62,7 @@ const SearchNav = ({ onSearch }) => {
                 className="rounded-full"
               />
               <div className="hidden sm:block">
-                <p className="font-semibold">Nada</p>
-                <p className="text-sm text-gray-500">gmail</p>
+                <p className="font-semibold">{firstName || "..."}</p>
               </div>
             </div>
           </div>
