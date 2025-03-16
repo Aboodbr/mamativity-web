@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import AddDataBox from "@/components/add-data-box";
 import DataDisplay from "@/components/display-data";
 import SearchNav from "@/components/SearchNav";
@@ -6,237 +6,213 @@ import { Button } from "@/components/ui/button";
 import AddDataModal from "@/modals/AddDataModal";
 import { Filter, Upload } from "lucide-react";
 import { useParams } from "react-router-dom";
-
-// Initial data for PDFs, Links, and Photos
-const initialPdfData = [
-  {
-    name: "Drawing1.pdf",
-    size: "91.4 KB",
-    uploadDate: "11/1/2025",
-    status: {
-      edited: false,
-      deleted: false,
-      downloaded: false,
-    },
-  },
-  {
-    name: "Drawing2.pdf",
-    size: "90.5 KB",
-    uploadDate: "12/2/2025",
-    status: {
-      edited: true,
-      deleted: false,
-      downloaded: true,
-    },
-  },
-];
-
-const initialLinkData = [
-  {
-    name: "Eexample Link 1",
-    size: "90.5 KB",
-    uploadDate: "12/2/2025",
-    status: {
-      edited: true,
-      deleted: false,
-      downloaded: true,
-    },
-  },
-  {
-    name: "Eaxample Link 2",
-    size: "90.5 KB",
-    uploadDate: "12/2/2025",
-    status: {
-      edited: true,
-      deleted: false,
-      downloaded: true,
-    },
-  },
-];
-
-const initialPhotoData = [
-  {
-    name: "Photo 1",
-    size: "90.5 KB",
-    uploadDate: "12/2/2025",
-    status: {
-      edited: true,
-      deleted: false,
-      downloaded: true,
-    },
-  },
-  {
-    name: "Photo 2",
-    size: "90.5 KB",
-    uploadDate: "12/2/2025",
-    status: {
-      edited: true,
-      deleted: false,
-      downloaded: true,
-    },
-  },
-];
+import { db } from "@/firebase";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 
 const AdminMonthDetails = () => {
   const { month } = useParams();
   const [selectedData, setSelectedData] = useState("pdf");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false); // State for filter box visibility
-  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pdfData, setPdfData] = useState([]);
+  const [linkData, setLinkData] = useState([]);
+  const [photoData, setPhotoData] = useState([]);
+  const [sortBy, setSortBy] = useState(null);
 
-  // Separate states for PDFs, Links, and Photos
-  const [pdfData, setPdfData] = useState(initialPdfData);
-  const [linkData, setLinkData] = useState(initialLinkData);
-  const [photoData, setPhotoData] = useState(initialPhotoData);
+  const extractSize = (sizeStr) =>
+    parseFloat(sizeStr?.replace(/[^\d.]/g, "") || 0);
 
-  // Sorting state
-  const [sortBy, setSortBy] = useState(null); // Can be "name", "size", or "date"
+  const fetchData = useCallback(async () => {
+    try {
+      const collections = ["pdfs", "images", "links"];
+      const [pdfsSnapshot, imagesSnapshot, linksSnapshot] = await Promise.all(
+        collections.map((col) =>
+          getDocs(collection(db, "months", month.toLowerCase(), col))
+        )
+      );
 
-  // Function to handle adding new data
-  const handleAddData = (newData) => {
-    switch (selectedData) {
-      case "pdf":
-        setPdfData((prevData) => [...prevData, newData]);
-        break;
-      case "link":
-        setLinkData((prevData) => [...prevData, newData]);
-        break;
-      case "image":
-        setPhotoData((prevData) => [...prevData, newData]);
-        break;
-      default:
-        break;
+      const formatDocs = (snapshot) =>
+        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      setPdfData(formatDocs(pdfsSnapshot));
+      setPhotoData(formatDocs(imagesSnapshot));
+      setLinkData(formatDocs(linksSnapshot));
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
-    setIsModalOpen(false); // Close the modal after adding data
+  }, [month]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleAddData = (newData) => {
+    const updateState = (prev) => [...prev, newData];
+    if (selectedData === "pdf") setPdfData(updateState);
+    else if (selectedData === "link") setLinkData(updateState);
+    else if (selectedData === "image") setPhotoData(updateState);
+    setIsModalOpen(false);
   };
 
-  // Get the current data based on the selected type
+  const handleEdit = async (id, currentName) => {
+    const newName = prompt("Enter new name:", currentName);
+    if (newName && newName !== currentName) {
+      const ref = doc(
+        db,
+        "months",
+        month.toLowerCase(),
+        `${selectedData}s`,
+        id
+      );
+      await updateDoc(ref, { name: newName, "status.edited": true });
+      fetchData();
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this item?")) {
+      const ref = doc(
+        db,
+        "months",
+        month.toLowerCase(),
+        `${selectedData}s`,
+        id
+      );
+      await updateDoc(ref, { "status.deleted": true }); // Soft delete
+      fetchData();
+    }
+  };
+
+  const handleDownload = async (id, url) => {
+    window.open(url, "_blank");
+    const ref = doc(db, "months", month.toLowerCase(), `${selectedData}s`, id);
+    await updateDoc(ref, { "status.downloaded": true });
+    fetchData();
+  };
+
+  const handleExport = () => {
+    const currentData =
+      selectedData === "pdf"
+        ? pdfData
+        : selectedData === "link"
+        ? linkData
+        : photoData;
+    const csv = ["Name,Size,Upload Date,URL"]
+      .concat(
+        currentData.map(
+          (item) => `${item.name},${item.size},${item.uploadDate},${item.url}`
+        )
+      )
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${month}_${selectedData}s.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const currentData =
     selectedData === "pdf"
       ? pdfData
       : selectedData === "link"
       ? linkData
       : photoData;
-
-  // Filter the data based on the search query
   const filteredData = currentData.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    item.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // Sort the data based on the selected criteria
   const sortedData = [...filteredData].sort((a, b) => {
-    if (sortBy === "name") {
-      return a.name.localeCompare(b.name);
-    } else if (sortBy === "size") {
-      const sizeA = parseFloat(a.size);
-      const sizeB = parseFloat(b.size);
-      return sizeA - sizeB;
-    } else if (sortBy === "date") {
-      const dateA = new Date(a.uploadDate);
-      const dateB = new Date(b.uploadDate);
-      return dateA - dateB;
-    } else {
-      return 0; // No sorting
-    }
+    if (sortBy === "name") return a.name.localeCompare(b.name);
+    if (sortBy === "size") return extractSize(a.size) - extractSize(b.size);
+    if (sortBy === "date")
+      return new Date(a.uploadDate) - new Date(b.uploadDate);
+    return 0;
   });
-
-  // Clear sorting
-  const clearSorting = () => {
-    setSortBy(null);
-  };
-
-  // Handle search query change
-  const handleSearchChange = (query) => {
-    setSearchQuery(query);
-  };
 
   return (
     <section className="container mx-auto px-4 py-8 relative">
-      <SearchNav onSearch={handleSearchChange} />
-      <div>
-        <h1 className="text-2xl font-bold mb-6 mt-7">{month} Month</h1>
+      <SearchNav onSearch={setSearchQuery} />
+      <h1 className="text-2xl font-bold mb-6 mt-7 capitalize">{month} Month</h1>
 
-        <div>
-          {/* Boxes */}
-          <AddDataBox
-            selectedData={selectedData}
-            setSelectedData={setSelectedData}
-          />
-          {/* Action buttons */}
-          <div className="flex justify-end gap-4 my-5 items-center">
-            <div
-              className="flex flex-row gap-2 items-center cursor-pointer relative"
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-            >
-              <Filter className="size-5 text-gray-600" />
-              Filter By
-              {/* Sort By Box */}
-              {isFilterOpen && (
-                <div className="bg-white p-6 rounded-lg shadow-md mb-6 absolute">
-                    <Button
-                      onClick={() => setSortBy("name")}
-                      className={`bg-none shadow-none rounded-none w-full border-b-2 border-black/10 cursor-pointer ${
-                        sortBy === "name"
-                          ? "bg-blue-500 text-white"
-                          : ""
-                      }`}
-                    >
-                      Sort by Name
-                    </Button>
-                    <Button
-                      onClick={() => setSortBy("size")}
-                      className={`bg-none shadow-none rounded-none w-full border-b-2 border-black/10 cursor-pointer ${
-                        sortBy === "size"
-                          ? "bg-blue-500 text-white"
-                          : ""
-                      }`}
-                    >
-                      Sort by Size
-                    </Button>
-                    <Button
-                      onClick={() => setSortBy("date")}
-                      className={`bg-none shadow-none rounded-none w-full border-b-2 border-black/10 cursor-pointer ${
-                        sortBy === "date"
-                          ? "bg-blue-500 text-white"
-                          : ""
-                      }`}
-                    >
-                      Sort by Date
-                    </Button>
-         
-                  <div className="flex justify-end mt-4">
-                    <Button
-                      onClick={clearSorting}
-                      className="bg-gray-200 hover:bg-gray-300"
-                    >
-                      Clear Sorting
-                    </Button>
-                  </div>
-                </div>
-              )}
+      <AddDataBox
+        selectedData={selectedData}
+        setSelectedData={setSelectedData}
+      />
+
+      <div className="flex justify-end gap-4 my-5 items-center">
+        <div
+          className="relative flex flex-row gap-2 items-center cursor-pointer"
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+        >
+          <Filter className="size-5 text-gray-600" /> Filter By
+          {isFilterOpen && (
+            <div className="absolute top-8 right-0 bg-white p-6 rounded-lg shadow-md z-10">
+              <Button
+                onClick={() => setSortBy("name")}
+                className={`w-full ${
+                  sortBy === "name" ? "bg-blue-500 text-white" : ""
+                }`}
+              >
+                Sort by Name
+              </Button>
+              <Button
+                onClick={() => setSortBy("size")}
+                className={`w-full ${
+                  sortBy === "size" ? "bg-blue-500 text-white" : ""
+                }`}
+              >
+                Sort by Size
+              </Button>
+              <Button
+                onClick={() => setSortBy("date")}
+                className={`w-full ${
+                  sortBy === "date" ? "bg-blue-500 text-white" : ""
+                }`}
+              >
+                Sort by Date
+              </Button>
+              <Button
+                onClick={() => setSortBy(null)}
+                className="mt-4 bg-gray-200 hover:bg-gray-300"
+              >
+                Clear Sorting
+              </Button>
             </div>
-            <Button className="bg-gray-200 text-md cursor-pointer rounded-full px-5 py-2 shadow-md hover:translate-0.5 duration-500">
-              <Upload />
-              Export
-            </Button>
-            <Button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-gray-200 text-md cursor-pointer rounded-full px-5 py-2 shadow-md hover:translate-0.5 duration-500"
-            >
-              Add a new file
-            </Button>
-          </div>
-
-          {/* List of data */}
-          <div
-            className={`p-[3px] bg-gradient-to-r from-[#94c3fc] to-[#CBF3FF] w-full rounded-xl overflow-hidden`}
-          >
-            <DataDisplay data={sortedData} type={selectedData} />
-          </div>
+          )}
         </div>
+
+        <Button
+          onClick={handleExport}
+          className="bg-gray-200 rounded-full px-5 py-2 shadow-md"
+        >
+          <Upload /> Export
+        </Button>
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-gray-200 rounded-full px-5 py-2 shadow-md"
+        >
+          Add a new file
+        </Button>
       </div>
 
-      {/* Modal */}
+      <div className="p-[3px] bg-gradient-to-r from-[#94c3fc] to-[#CBF3FF] w-full rounded-xl overflow-hidden">
+        {sortedData.length > 0 ? (
+          <DataDisplay
+            data={sortedData}
+            type={selectedData}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onDownload={handleDownload}
+          />
+        ) : (
+          <p className="p-4 text-center text-gray-500">
+            No {selectedData}s found for {month}.
+          </p>
+        )}
+      </div>
+
       <AddDataModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
