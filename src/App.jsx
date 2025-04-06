@@ -22,6 +22,8 @@ import DashboardPage from "./pages/admin/DashBoard";
 import UsersManagement from "./pages/admin/UsersManagement";
 import ContentManagement from "./pages/admin/ContentManagement";
 import AdminMonthDetails from "./pages/admin/AdminMonthDetails";
+import Articles from "./pages/admin/Articles";
+import NewArticle from "./pages/admin/NewArticle";
 
 function App() {
   return (
@@ -50,6 +52,8 @@ function App() {
         <Route path="/admin/home"  element={<DashboardPage />} />
         <Route path="/admin/user-management"  element={<UsersManagement />} />
         <Route path="/admin/content-management"  element={<ContentManagement />} />
+        <Route path="/admin/articles"  element={<Articles />} />
+        <Route path="/admin/articles/add-new-article"  element={<NewArticle />} />
         <Route path="/admin/content-management/:month"  element={<AdminMonthDetails />} />
       </Route>
 

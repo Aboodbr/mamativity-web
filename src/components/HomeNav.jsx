@@ -73,6 +73,7 @@ const HomeNav = ({ closeNav }) => {
       path: "admin/content-management",
       icon: navIcon8,
     },
+    { name: "Articles", path: "admin/articles", icon: navIcon8 },
     { name: "Settings", path: "settings", icon: navIcon9 },
   ];
 

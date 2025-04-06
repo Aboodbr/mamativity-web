@@ -52,11 +52,11 @@ export default function Hero() {
             {/* Image Section */}
             <div className="order-2 lg:order-1  h-full">
               <div className=" aspect-square max-w-2xl mx-auto">
-                {/* <img
+                <img
                   src={heroImage}
                   alt="Peaceful sleeping baby"
                   className="object- absolute w-[50%] left-0 bottom-0 rounded-2xl h-auto minh-[70%]"
-                /> */}
+                />
               </div>
             </div>
 

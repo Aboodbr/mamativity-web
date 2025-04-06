@@ -1,21 +1,20 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, FileIcon, Image as ImageIcon, Link, Text } from "lucide-react";
 
 const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
   const [file, setFile] = useState(null);
   const [link, setLink] = useState("");
   const [name, setName] = useState("");
-  const [imagePreview, setImagePreview] = useState(null); // For image preview
+  const [content, setContent] = useState(""); // For text content
+  const [imagePreview, setImagePreview] = useState(null);
 
   if (!isOpen) return null;
 
-  // Handle file input change
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setFile(file);
 
-    // If the file is an image, generate a preview
     if (selectedData === "image" && file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -23,7 +22,7 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
       };
       reader.readAsDataURL(file);
     } else {
-      setImagePreview(null); // Clear preview if not an image
+      setImagePreview(null);
     }
   };
 
@@ -31,13 +30,14 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
     e.preventDefault();
     const newData = {
       name,
-      size: "0 KB", // You can calculate the size later
+      size: selectedData === "text" ? `${content.length} chars` : "0 KB",
       uploadDate: new Date().toLocaleDateString(),
       status: {
         edited: false,
         deleted: false,
         downloaded: false,
       },
+      ...(selectedData === "text" && { content }), // Add content for text
     };
 
     if (selectedData === "pdf" || selectedData === "image") {
@@ -48,6 +48,12 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
 
     onAddData(newData);
     onClose();
+    // Reset form
+    setFile(null);
+    setLink("");
+    setName("");
+    setContent("");
+    setImagePreview(null);
   };
 
   return (
@@ -68,9 +74,8 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
                 accept={selectedData === "pdf" ? "application/pdf" : "image/*"}
                 onChange={handleFileChange}
                 className="w-full p-2 border rounded"
-                required
+                required={selectedData !== "text"}
               />
-              {/* Image preview */}
               {selectedData === "image" && imagePreview && (
                 <div className="mt-4">
                   <img
@@ -91,6 +96,18 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
                 onChange={(e) => setLink(e.target.value)}
                 className="w-full p-2 border rounded"
                 placeholder="Enter link"
+                required
+              />
+            </div>
+          )}
+          {selectedData === "text" && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Content</label>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="w-full p-2 border rounded min-h-[100px]"
+                placeholder="Enter your text content"
                 required
               />
             </div>

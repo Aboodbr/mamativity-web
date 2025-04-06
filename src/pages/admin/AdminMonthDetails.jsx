@@ -77,6 +77,32 @@ const initialPhotoData = [
   },
 ];
 
+// Add this with your other initial data constants
+const initialTextData = [
+  {
+    name: "Meeting Notes",
+    content: "Discussed project timeline and deliverables for Q3. Team agreed on new milestones.",
+    size: "112 chars",
+    uploadDate: "10/15/2025",
+    status: {
+      edited: true,
+      deleted: false,
+      downloaded: false,
+    },
+  },
+  {
+    name: "Ideas Brainstorm",
+    content: "Potential features for next release: Dark mode, Export functionality, Text notes integration",
+    size: "145 chars",
+    uploadDate: "11/2/2025",
+    status: {
+      edited: false,
+      deleted: false,
+      downloaded: false,
+    },
+  },
+];
+
 const AdminMonthDetails = () => {
   const { month } = useParams();
   const [selectedData, setSelectedData] = useState("pdf");
@@ -88,6 +114,7 @@ const AdminMonthDetails = () => {
   const [pdfData, setPdfData] = useState(initialPdfData);
   const [linkData, setLinkData] = useState(initialLinkData);
   const [photoData, setPhotoData] = useState(initialPhotoData);
+  const [textData, setTextData] = useState(initialTextData);
 
   // Sorting state
   const [sortBy, setSortBy] = useState(null); // Can be "name", "size", or "date"
@@ -104,10 +131,16 @@ const AdminMonthDetails = () => {
       case "image":
         setPhotoData((prevData) => [...prevData, newData]);
         break;
+      case "text":
+        setTextData((prevData) => [...prevData, {
+          ...newData,
+          size: `${newData.content.length} chars` // Calculate size for text
+        }]);
+        break;
       default:
         break;
     }
-    setIsModalOpen(false); // Close the modal after adding data
+    setIsModalOpen(false);
   };
 
   // Get the current data based on the selected type
@@ -116,7 +149,9 @@ const AdminMonthDetails = () => {
       ? pdfData
       : selectedData === "link"
       ? linkData
-      : photoData;
+      : selectedData === "image"
+      ? photoData
+      : textData;
 
   // Filter the data based on the search query
   const filteredData = currentData.filter((item) =>
