@@ -12,7 +12,8 @@ import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 const initialTextData = [
   {
     name: "Meeting Notes",
-    content: "Discussed project timeline and deliverables for Q3. Team agreed on new milestones.",
+    content:
+      "Discussed project timeline and deliverables for Q3. Team agreed on new milestones.",
     size: "112 chars",
     uploadDate: "10/15/2025",
     status: {
@@ -23,7 +24,8 @@ const initialTextData = [
   },
   {
     name: "Ideas Brainstorm",
-    content: "Potential features for next release: Dark mode, Export functionality, Text notes integration",
+    content:
+      "Potential features for next release: Dark mode, Export functionality, Text notes integration",
     size: "145 chars",
     uploadDate: "11/2/2025",
     status: {
@@ -41,14 +43,16 @@ const AdminMonthDetails = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState(null);
-  
+
   // Initialize all data types
   const [pdfData, setPdfData] = useState([]);
   const [linkData, setLinkData] = useState([]);
   const [photoData, setPhotoData] = useState([]);
   const [textData, setTextData] = useState(initialTextData);
+  
 
-  const extractSize = (sizeStr) => parseFloat(sizeStr?.replace(/[^\d.]/g, "") || 0);
+  const extractSize = (sizeStr) =>
+    parseFloat(sizeStr?.replace(/[^\d.]/g, "") || 0);
 
   const fetchData = useCallback(async () => {
     try {
@@ -86,10 +90,13 @@ const AdminMonthDetails = () => {
         setPhotoData((prev) => [...prev, newData]);
         break;
       case "text":
-        setTextData((prev) => [...prev, {
-          ...newData,
-          size: `${newData.content.length} chars`
-        }]);
+        setTextData((prev) => [
+          ...prev,
+          {
+            ...newData,
+            size: `${newData.content.length} chars`,
+          },
+        ]);
         break;
       default:
         break;
@@ -101,13 +108,27 @@ const AdminMonthDetails = () => {
     const newName = prompt("Enter new name:", currentName);
     if (newName && newName !== currentName) {
       if (selectedData !== "text") {
-        const ref = doc(db, "months", month.toLowerCase(), `${selectedData}s`, id);
+        const ref = doc(
+          db,
+          "months",
+          month.toLowerCase(),
+          `${selectedData}s`,
+          id
+        );
         await updateDoc(ref, { name: newName, "status.edited": true });
         fetchData();
       } else {
-        setTextData(prev => prev.map(item => 
-          item.id === id ? {...item, name: newName, status: {...item.status, edited: true}} : item
-        ));
+        setTextData((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  name: newName,
+                  status: { ...item.status, edited: true },
+                }
+              : item
+          )
+        );
       }
     }
   };
@@ -115,13 +136,23 @@ const AdminMonthDetails = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
       if (selectedData !== "text") {
-        const ref = doc(db, "months", month.toLowerCase(), `${selectedData}s`, id);
+        const ref = doc(
+          db,
+          "months",
+          month.toLowerCase(),
+          `${selectedData}s`,
+          id
+        );
         await updateDoc(ref, { "status.deleted": true });
         fetchData();
       } else {
-        setTextData(prev => prev.map(item => 
-          item.id === id ? {...item, status: {...item.status, deleted: true}} : item
-        ));
+        setTextData((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? { ...item, status: { ...item.status, deleted: true } }
+              : item
+          )
+        );
       }
     }
   };
@@ -129,7 +160,13 @@ const AdminMonthDetails = () => {
   const handleDownload = async (id, url) => {
     if (selectedData !== "text") {
       window.open(url, "_blank");
-      const ref = doc(db, "months", month.toLowerCase(), `${selectedData}s`, id);
+      const ref = doc(
+        db,
+        "months",
+        month.toLowerCase(),
+        `${selectedData}s`,
+        id
+      );
       await updateDoc(ref, { "status.downloaded": true });
       fetchData();
     } else {
@@ -139,19 +176,23 @@ const AdminMonthDetails = () => {
 
   const handleExport = () => {
     const currentData =
-      selectedData === "pdf" ? pdfData :
-      selectedData === "link" ? linkData :
-      selectedData === "image" ? photoData :
-      textData;
-    
+      selectedData === "pdf"
+        ? pdfData
+        : selectedData === "link"
+        ? linkData
+        : selectedData === "image"
+        ? photoData
+        : textData;
+
     const csv = ["Name,Size,Upload Date,URL"]
       .concat(
-        currentData.map(item => 
-          `${item.name},${item.size},${item.uploadDate},${item.url || ''}`
+        currentData.map(
+          (item) =>
+            `${item.name},${item.size},${item.uploadDate},${item.url || ""}`
         )
       )
       .join("\n");
-    
+
     const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -162,10 +203,13 @@ const AdminMonthDetails = () => {
   };
 
   const currentData =
-    selectedData === "pdf" ? pdfData :
-    selectedData === "link" ? linkData :
-    selectedData === "image" ? photoData :
-    textData;
+    selectedData === "pdf"
+      ? pdfData
+      : selectedData === "link"
+      ? linkData
+      : selectedData === "image"
+      ? photoData
+      : textData;
 
   const filteredData = currentData.filter((item) =>
     item.name?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -174,7 +218,8 @@ const AdminMonthDetails = () => {
   const sortedData = [...filteredData].sort((a, b) => {
     if (sortBy === "name") return a.name.localeCompare(b.name);
     if (sortBy === "size") return extractSize(a.size) - extractSize(b.size);
-    if (sortBy === "date") return new Date(a.uploadDate) - new Date(b.uploadDate);
+    if (sortBy === "date")
+      return new Date(a.uploadDate) - new Date(b.uploadDate);
     return 0;
   });
 
@@ -190,27 +235,34 @@ const AdminMonthDetails = () => {
 
       <div className="flex justify-end gap-4 my-5 items-center">
         <div
-          className="relative flex flex-row gap-2 items-center cursor-pointer"
+          className="relative flex flex-row gap-1 md:gap-2 items-center cursor-pointer"
           onClick={() => setIsFilterOpen(!isFilterOpen)}
         >
-          <Filter className="size-5 text-gray-600" /> Filter By
+          <Filter className="size-5 text-gray-600" />{" "}
+          <span className="hidden sm:flex">Filter By</span>
           {isFilterOpen && (
             <div className="absolute top-8 right-0 bg-white p-6 rounded-lg shadow-md z-10">
               <Button
                 onClick={() => setSortBy("name")}
-                className={`w-full ${sortBy === "name" ? "bg-blue-500 text-white" : ""}`}
+                className={`w-full ${
+                  sortBy === "name" ? "bg-blue-500 text-white" : ""
+                }`}
               >
                 Sort by Name
               </Button>
               <Button
                 onClick={() => setSortBy("size")}
-                className={`w-full ${sortBy === "size" ? "bg-blue-500 text-white" : ""}`}
+                className={`w-full ${
+                  sortBy === "size" ? "bg-blue-500 text-white" : ""
+                }`}
               >
                 Sort by Size
               </Button>
               <Button
                 onClick={() => setSortBy("date")}
-                className={`w-full ${sortBy === "date" ? "bg-blue-500 text-white" : ""}`}
+                className={`w-full ${
+                  sortBy === "date" ? "bg-blue-500 text-white" : ""
+                }`}
               >
                 Sort by Date
               </Button>
@@ -238,7 +290,7 @@ const AdminMonthDetails = () => {
         </Button>
       </div>
 
-      <div className="p-[3px] bg-gradient-to-r from-[#94c3fc] to-[#CBF3FF] w-full rounded-xl overflow-hidden">
+      <div className="p-[3px] bg-gradient-to-r from-[#94c3fc] to-[#CBF3FF] w-full rounded-xl overflow-x-auto">
         {sortedData.length > 0 ? (
           <DataDisplay
             data={sortedData}
