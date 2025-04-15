@@ -1,9 +1,15 @@
 import PropTypes from "prop-types";
 import { Dialog } from "@headlessui/react";
-import { X, FileIcon, Image as ImageIcon, Link as LinkIcon, Text } from "lucide-react";
+import { X } from "lucide-react";
 import { uploadFileToCloudinary } from "@/utils/uploadToCloudinary";
 import { db } from "@/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  doc,
+  setDoc,
+} from "firebase/firestore";
 import { useParams } from "react-router-dom";
 import { useState } from "react";
 
@@ -18,20 +24,21 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
   const [error, setError] = useState("");
 
   const isValidUrl = (url) => {
-    const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?$/i;
+    const urlPattern =
+      /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/i;
     return urlPattern.test(url);
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setFile(file);
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
 
-    if (selectedData === "image" && file) {
+    if (selectedData === "image" && selectedFile) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(selectedFile);
     } else {
       setImagePreview(null);
     }
@@ -52,8 +59,16 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
     setError("");
 
     try {
+      if (!month) {
+        throw new Error("Month parameter is missing.");
+      }
+
+      if (!name.trim()) {
+        throw new Error("Please enter a name for the section.");
+      }
+
       let fileUrl = "";
-      let fileSize = "0 KB";
+      let fileSize = "";
 
       if (selectedData === "link") {
         if (!link || !isValidUrl(link)) {
@@ -61,7 +76,7 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
         }
         fileUrl = link;
       } else if (selectedData === "text") {
-        if (!content) {
+        if (!content.trim()) {
           throw new Error("Please enter some text content.");
         }
         fileUrl = content;
@@ -73,45 +88,64 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
         ) {
           throw new Error(`Please upload a valid ${selectedData} file.`);
         }
-        const url = await uploadFileToCloudinary(file);
-        fileUrl = url;
+        fileUrl = await uploadFileToCloudinary(file);
         fileSize = (file.size / 1024).toFixed(1) + " KB";
       } else {
         throw new Error("Please select a file or enter content.");
       }
 
       const newData = {
-        name: name || file?.name || "Unnamed",
+        name,
         url: fileUrl,
         size: fileSize,
         uploadDate: new Date().toLocaleDateString("en-US"),
-        status: {
-          edited: false,
-          deleted: false,
-          downloaded: false,
-        },
         createdAt: serverTimestamp(),
       };
 
-      await addDoc(
-        collection(db, "months", month.toLowerCase(), `${selectedData}s`),
+      console.log("Data to be submitted:", newData);
+
+      // Ensure the month document exists in the months collection
+      const monthDocRef = doc(db, "months", month.toLowerCase());
+      await setDoc(
+        monthDocRef,
+        { createdAt: serverTimestamp() },
+        { merge: true }
+      );
+
+      // Save to months/{month}/{selectedData} collection
+      const docRef = await addDoc(
+        collection(db, "months", month.toLowerCase(), selectedData),
         newData
       );
 
-      onAddData(newData);
+      console.log("Document added with ID:", docRef.id);
+
+      try {
+        onAddData({ ...newData, id: docRef.id });
+      } catch (addDataError) {
+        console.error("Error in onAddData:", addDataError);
+        throw new Error("Failed to update parent component.");
+      }
+
       resetForm();
       onClose();
-    } catch (error) {
-      setError(error.message || "Error uploading data. Please try again.");
+    } catch (err) {
+      console.error("Submission error:", err);
+      setError(err.message || "Error uploading data. Please try again.");
     } finally {
       setUploading(false);
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <Dialog
       open={isOpen}
-      onClose={onClose}
+      onClose={() => {
+        resetForm();
+        onClose();
+      }}
       className="fixed z-50 inset-0 overflow-y-auto"
     >
       <div className="flex items-center justify-center min-h-screen bg-black/30 p-4">
@@ -134,24 +168,29 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Name</label>
+              <label className="block text-sm font-medium mb-1">
+                Section Name
+              </label>
               <input
                 type="text"
-                placeholder="Name (optional)"
+                placeholder="e.g. Section1"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full border p-2 rounded"
+                required
               />
             </div>
 
             {(selectedData === "pdf" || selectedData === "image") && (
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Upload {selectedData}
+                  Upload {selectedData === "pdf" ? "PDF" : "Image"}
                 </label>
                 <input
                   type="file"
-                  accept={selectedData === "pdf" ? "application/pdf" : "image/*"}
+                  accept={
+                    selectedData === "pdf" ? "application/pdf" : "image/*"
+                  }
                   onChange={handleFileChange}
                   className="w-full p-2 border rounded"
                   required
@@ -184,7 +223,9 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
 
             {selectedData === "text" && (
               <div>
-                <label className="block text-sm font-medium mb-1">Content</label>
+                <label className="block text-sm font-medium mb-1">
+                  Content
+                </label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}

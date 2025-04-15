@@ -1,41 +1,58 @@
-
 import { Filter, Upload } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import VaccinationTable from "./vaccination-table";
 import AddFileModal from "../modals/AddFileModal";
+import { db } from "@/firebase";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 
 const VaccinationScheduless = ({ searchTerm }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [records, setRecords] = useState([
-    {
-      id: "1",
-      pdfName: "Hepatitis BA",
-      vaccinationDate: "1\\11\\2025",
-      age: "After birth (within 24 hours)",
-      isDeleted: false,
-      isEdited: true,
-    },
-  ]);
+  const [records, setRecords] = useState([]);
 
   const filterRef = useRef(null);
 
+  // جلب البيانات من Firestore
+  const fetchRecords = useCallback(async () => {
+    try {
+      const recordsSnapshot = await getDocs(collection(db, "Vaccinations"));
+      const recordsData = recordsSnapshot.docs.map((doc) => ({
+        id: doc.id, // استخدام معرف المستند كـ id
+        vaccineName: doc.id, // اسم التطعيم (معرف المستند)
+        ...doc.data(),
+        isDeleted: doc.data().isDeleted || false, // إضافة حالة الحذف
+        isEdited: doc.data().isEdited || false, // إضافة حالة التعديل
+      }));
+      setRecords(recordsData);
+      console.log("Fetched records:", recordsData);
+    } catch (error) {
+      console.error("Error fetching records from Firestore:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRecords();
+  }, [fetchRecords]);
+
+  // تصفية السجلات بناءً على البحث
   const filteredRecords = records.filter(
     (record) =>
-      record.pdfName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.age.toLowerCase().includes(searchTerm.toLowerCase())
+      record.vaccineName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.age.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.disease.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // ترتيب السجلات
   const sortedRecords = [...filteredRecords].sort((a, b) => {
     if (!sortBy) return 0;
-    if (sortBy === "name") return a.pdfName.localeCompare(b.pdfName);
-    if (sortBy === "date")
-      return a.vaccinationDate.localeCompare(b.vaccinationDate);
-    if (sortBy === "size") return a.age.localeCompare(b.age);
+    if (sortBy === "name") return a.vaccineName.localeCompare(b.vaccineName);
+    if (sortBy === "date") return a.createdAt - b.createdAt; // ترتيب حسب تاريخ الإنشاء
+    if (sortBy === "size") return a.doseSize.localeCompare(b.doseSize);
     return 0;
   });
 
+  // إغلاق قائمة التصفية عند النقر خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (filterRef.current && !filterRef.current.contains(event.target)) {
@@ -54,32 +71,51 @@ const VaccinationScheduless = ({ searchTerm }) => {
     setIsFilterOpen(false);
   };
 
+  // إضافة سجل جديد
   const handleAddFile = (newFile) => {
     const newRecord = {
-      id: (records.length + 1).toString(),
-      pdfName: newFile.pdfName,
-      vaccinationDate: newFile.vaccinationDate,
+      id: newFile.vaccineName.toLowerCase(), // استخدام vaccineName كمعرف
+      vaccineName: newFile.vaccineName,
       age: newFile.age,
+      disease: newFile.disease,
+      doseSize: newFile.doseSize,
+      method: newFile.method,
+      createdAt: newFile.createdAt,
       isDeleted: false,
       isEdited: false,
     };
-    setRecords([...records, newRecord]);
+    setRecords((prev) => [...prev, newRecord]);
+    fetchRecords(); // إعادة جلب البيانات من Firestore للتأكد من التحديث
   };
 
-  const handleDelete = (id) => {
-    setRecords(
-      records.map((record) =>
-        record.id === id ? { ...record, isDeleted: true } : record
-      )
-    );
+  // حذف سجل
+  const handleDelete = async (id) => {
+    try {
+      const recordRef = doc(db, "Vaccinations", id);
+      await updateDoc(recordRef, { isDeleted: true });
+      setRecords(
+        records.map((record) =>
+          record.id === id ? { ...record, isDeleted: true } : record
+        )
+      );
+    } catch (error) {
+      console.error("Error deleting record:", error);
+    }
   };
 
-  const handleEdit = (id) => {
-    setRecords(
-      records.map((record) =>
-        record.id === id ? { ...record, isEdited: true } : record
-      )
-    );
+  // تعديل سجل (غير مستخدم حاليًا، لكن سنتركه للاحتياط)
+  const handleEdit = async (id) => {
+    try {
+      const recordRef = doc(db, "Vaccinations", id);
+      await updateDoc(recordRef, { isEdited: true });
+      setRecords(
+        records.map((record) =>
+          record.id === id ? { ...record, isEdited: true } : record
+        )
+      );
+    } catch (error) {
+      console.error("Error editing record:", error);
+    }
   };
 
   const handleSort = (type) => {
@@ -91,7 +127,9 @@ const VaccinationScheduless = ({ searchTerm }) => {
     <div className="w-full p-4 md:p-6">
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row justify-between gap-4 my-5 items-start lg:items-center">
-        <h1 className="text-xl md:text-2xl font-semibold">Vaccination schedule</h1>
+        <h1 className="text-xl md:text-2xl font-semibold">
+          Vaccination schedule
+        </h1>
 
         <div className="flex flex-col lg:flex-row gap-3 w-full lg:w-auto">
           {/* Filter Button Group */}
@@ -125,6 +163,16 @@ const VaccinationScheduless = ({ searchTerm }) => {
                   }`}
                 >
                   Sort by Date
+                </button>
+                <button
+                  onClick={() => handleSort("size")}
+                  className={`w-full text-left p-2 ${
+                    sortBy === "size"
+                      ? "bg-blue-500 text-white rounded-md"
+                      : "hover:bg-gray-100 rounded-md"
+                  }`}
+                >
+                  Sort by Dose Size
                 </button>
                 <div className="flex justify-end mt-2">
                   <button

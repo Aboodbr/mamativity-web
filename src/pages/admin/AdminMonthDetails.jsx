@@ -7,32 +7,13 @@ import AddDataModal from "@/modals/AddDataModal";
 import { Filter, Upload } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { db } from "@/firebase";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
-
-const initialTextData = [
-  {
-    name: "Meeting Notes",
-    content: "Discussed project timeline and deliverables for Q3. Team agreed on new milestones.",
-    size: "112 chars",
-    uploadDate: "10/15/2025",
-    status: {
-      edited: true,
-      deleted: false,
-      downloaded: false,
-    },
-  },
-  {
-    name: "Ideas Brainstorm",
-    content: "Potential features for next release: Dark mode, Export functionality, Text notes integration",
-    size: "145 chars",
-    uploadDate: "11/2/2025",
-    status: {
-      edited: false,
-      deleted: false,
-      downloaded: false,
-    },
-  },
-];
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
 
 const AdminMonthDetails = () => {
   const { month } = useParams();
@@ -41,30 +22,42 @@ const AdminMonthDetails = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState(null);
-  
-  // Initialize all data types
+
   const [pdfData, setPdfData] = useState([]);
   const [linkData, setLinkData] = useState([]);
   const [photoData, setPhotoData] = useState([]);
-  const [textData, setTextData] = useState(initialTextData);
+  const [textData, setTextData] = useState([]);
 
-  const extractSize = (sizeStr) => parseFloat(sizeStr?.replace(/[^\d.]/g, "") || 0);
+  const extractSize = (sizeStr) =>
+    parseFloat(sizeStr?.replace(/[^\d.]/g, "") || 0);
 
   const fetchData = useCallback(async () => {
     try {
-      const collections = ["pdfs", "images", "links"];
-      const [pdfsSnapshot, imagesSnapshot, linksSnapshot] = await Promise.all(
-        collections.map((col) =>
-          getDocs(collection(db, "months", month.toLowerCase(), col))
-        )
-      );
+      const collections = ["pdf", "image", "link", "text"];
+
+      const [pdfSnapshot, imageSnapshot, linkSnapshot, textSnapshot] =
+        await Promise.all(
+          collections.map((col) =>
+            getDocs(collection(db, "months", month.toLowerCase(), col))
+          )
+        );
 
       const formatDocs = (snapshot) =>
-        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          status: doc.data().status || {
+            edited: false,
+            deleted: false,
+            downloaded: false,
+          },
+          content: doc.data().url,
+        }));
 
-      setPdfData(formatDocs(pdfsSnapshot));
-      setPhotoData(formatDocs(imagesSnapshot));
-      setLinkData(formatDocs(linksSnapshot));
+      setPdfData(formatDocs(pdfSnapshot));
+      setPhotoData(formatDocs(imageSnapshot));
+      setLinkData(formatDocs(linkSnapshot));
+      setTextData(formatDocs(textSnapshot));
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -75,53 +68,54 @@ const AdminMonthDetails = () => {
   }, [fetchData]);
 
   const handleAddData = (newData) => {
+    const newItem = {
+      ...newData,
+      status: { edited: false, deleted: false, downloaded: false },
+    };
+
     switch (selectedData) {
       case "pdf":
-        setPdfData((prev) => [...prev, newData]);
+        setPdfData((prev) => [...prev, newItem]);
         break;
       case "link":
-        setLinkData((prev) => [...prev, newData]);
+        setLinkData((prev) => [...prev, newItem]);
         break;
       case "image":
-        setPhotoData((prev) => [...prev, newData]);
+        setPhotoData((prev) => [...prev, newItem]);
         break;
       case "text":
-        setTextData((prev) => [...prev, {
-          ...newData,
-          size: `${newData.content.length} chars`
-        }]);
+        setTextData((prev) => [
+          ...prev,
+          {
+            ...newItem,
+            content: newData.url,
+          },
+        ]);
         break;
       default:
         break;
     }
     setIsModalOpen(false);
+    fetchData();
   };
 
   const handleEdit = async (id, currentName) => {
     const newName = prompt("Enter new name:", currentName);
     if (newName && newName !== currentName) {
-      if (selectedData !== "text") {
-        const ref = doc(db, "months", month.toLowerCase(), `${selectedData}s`, id);
-        await updateDoc(ref, { name: newName, "status.edited": true });
-        fetchData();
-      } else {
-        setTextData(prev => prev.map(item => 
-          item.id === id ? {...item, name: newName, status: {...item.status, edited: true}} : item
-        ));
-      }
+      const ref = doc(db, "months", month.toLowerCase(), selectedData, id);
+      await updateDoc(ref, { name: newName, "status.edited": true });
+      fetchData();
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
-      if (selectedData !== "text") {
-        const ref = doc(db, "months", month.toLowerCase(), `${selectedData}s`, id);
-        await updateDoc(ref, { "status.deleted": true });
+      const ref = doc(db, "months", month.toLowerCase(), selectedData, id);
+      try {
+        await deleteDoc(ref);
         fetchData();
-      } else {
-        setTextData(prev => prev.map(item => 
-          item.id === id ? {...item, status: {...item.status, deleted: true}} : item
-        ));
+      } catch (error) {
+        console.error("Error deleting item:", error);
       }
     }
   };
@@ -129,29 +123,33 @@ const AdminMonthDetails = () => {
   const handleDownload = async (id, url) => {
     if (selectedData !== "text") {
       window.open(url, "_blank");
-      const ref = doc(db, "months", month.toLowerCase(), `${selectedData}s`, id);
+      const ref = doc(db, "months", month.toLowerCase(), selectedData, id);
       await updateDoc(ref, { "status.downloaded": true });
       fetchData();
-    } else {
-      // Handle text download if needed
     }
   };
 
   const handleExport = () => {
     const currentData =
-      selectedData === "pdf" ? pdfData :
-      selectedData === "link" ? linkData :
-      selectedData === "image" ? photoData :
-      textData;
-    
+      selectedData === "pdf"
+        ? pdfData
+        : selectedData === "link"
+        ? linkData
+        : selectedData === "image"
+        ? photoData
+        : textData;
+
     const csv = ["Name,Size,Upload Date,URL"]
       .concat(
-        currentData.map(item => 
-          `${item.name},${item.size},${item.uploadDate},${item.url || ''}`
+        currentData.map(
+          (item) =>
+            `${item.name},${item.size},${item.uploadDate},${
+              item.url || item.content || ""
+            }`
         )
       )
       .join("\n");
-    
+
     const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -162,10 +160,13 @@ const AdminMonthDetails = () => {
   };
 
   const currentData =
-    selectedData === "pdf" ? pdfData :
-    selectedData === "link" ? linkData :
-    selectedData === "image" ? photoData :
-    textData;
+    selectedData === "pdf"
+      ? pdfData
+      : selectedData === "link"
+      ? linkData
+      : selectedData === "image"
+      ? photoData
+      : textData;
 
   const filteredData = currentData.filter((item) =>
     item.name?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -174,7 +175,8 @@ const AdminMonthDetails = () => {
   const sortedData = [...filteredData].sort((a, b) => {
     if (sortBy === "name") return a.name.localeCompare(b.name);
     if (sortBy === "size") return extractSize(a.size) - extractSize(b.size);
-    if (sortBy === "date") return new Date(a.uploadDate) - new Date(b.uploadDate);
+    if (sortBy === "date")
+      return new Date(a.uploadDate) - new Date(b.uploadDate);
     return 0;
   });
 
@@ -198,19 +200,25 @@ const AdminMonthDetails = () => {
             <div className="absolute top-8 right-0 bg-white p-6 rounded-lg shadow-md z-10">
               <Button
                 onClick={() => setSortBy("name")}
-                className={`w-full ${sortBy === "name" ? "bg-blue-500 text-white" : ""}`}
+                className={`w-full ${
+                  sortBy === "name" ? "bg-blue-500 text-white" : ""
+                }`}
               >
                 Sort by Name
               </Button>
               <Button
                 onClick={() => setSortBy("size")}
-                className={`w-full ${sortBy === "size" ? "bg-blue-500 text-white" : ""}`}
+                className={`w-full ${
+                  sortBy === "size" ? "bg-blue-500 text-white" : ""
+                }`}
               >
                 Sort by Size
               </Button>
               <Button
                 onClick={() => setSortBy("date")}
-                className={`w-full ${sortBy === "date" ? "bg-blue-500 text-white" : ""}`}
+                className={`w-full ${
+                  sortBy === "date" ? "bg-blue-500 text-white" : ""
+                }`}
               >
                 Sort by Date
               </Button>

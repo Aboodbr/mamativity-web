@@ -1,7 +1,14 @@
-import { FileIcon, Image, Link, Text } from "lucide-react";
+import {
+  FileIcon,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Text as TextIcon,
+  Trash2,
+  Eye,
+} from "lucide-react";
 import PropTypes from "prop-types";
 
-const DataDisplay = ({ data, type, onEdit, onDelete, onDownload }) => {
+const DataDisplay = ({ data, type, onDelete, onDownload }) => {
   return (
     <div className="w-full rounded-lg overflow-hidden bg-white">
       <table className="w-full">
@@ -11,29 +18,39 @@ const DataDisplay = ({ data, type, onEdit, onDelete, onDownload }) => {
               {type.charAt(0).toUpperCase() + type.slice(1)} Name
             </th>
             {type !== "text" && (
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Size</th>
-            )}
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Upload Date</th>
-            {type === "text" && (
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Preview</th>
-            )}
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Edit</th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Delete</th>
-            {type !== "text" && (
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                {type === "image" ? "Display" : "Download"}
+                Size
               </th>
             )}
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+              Upload Date
+            </th>
+            {type === "text" && (
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                Preview
+              </th>
+            )}
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+              Action
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
           {data.map((item) => (
             <tr key={item.id} className="hover:bg-gray-50">
               <td className="px-4 py-3 flex items-center gap-2">
-                {type === "pdf" && <FileIcon className="h-5 w-5 text-red-500" />}
-                {type === "link" && <Link className="h-5 w-5 text-red-500" />}
-                {type === "image" && <Image className="h-5 w-5 text-red-500" />}
-                {type === "text" && <Text className="h-5 w-5 text-red-500" />}
+                {type === "pdf" && (
+                  <FileIcon className="h-5 w-5 text-red-500" />
+                )}
+                {type === "link" && (
+                  <LinkIcon className="h-5 w-5 text-red-500" />
+                )}
+                {type === "image" && (
+                  <ImageIcon className="h-5 w-5 text-red-500" />
+                )}
+                {type === "text" && (
+                  <TextIcon className="h-5 w-5 text-red-500" />
+                )}
                 <span className="text-sm text-gray-900">
                   {item.name || "Unnamed"}
                 </span>
@@ -45,62 +62,40 @@ const DataDisplay = ({ data, type, onEdit, onDelete, onDownload }) => {
                   />
                 )}
               </td>
+
               {type !== "text" && (
                 <td className="px-4 py-3 text-sm text-gray-500">
                   {item.size || "N/A"}
                 </td>
               )}
+
               <td className="px-4 py-3 text-sm text-gray-500">
                 {item.uploadDate || "N/A"}
               </td>
+
               {type === "text" && (
                 <td className="px-4 py-3 text-sm text-gray-500">
                   {item.content?.substring(0, 30)}...
                 </td>
               )}
-              <td className="px-4 py-3">
+
+              <td className="px-4 py-3 flex items-center gap-3">
                 <button
-                  onClick={() => onEdit(item.id, item.name)}
-                  disabled={item.status?.edited}
-                  className={`px-3 py-1 rounded-md text-sm ${
-                    item.status?.edited
-                      ? "bg-pink-100 text-pink-700"
-                      : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                  }`}
+                  onClick={() => onDownload(item.id, item.url)}
+                  className="text-blue-600 hover:text-blue-800"
+                  title={type === "image" ? "عرض" : "تحميل"}
                 >
-                  {item.status?.edited ? "Edited" : "Edit"}
+                  <Eye className="h-5 w-5" />
                 </button>
-              </td>
-              <td className="px-4 py-3">
+
                 <button
                   onClick={() => onDelete(item.id)}
-                  disabled={item.status?.deleted}
-                  className={`px-3 py-1 rounded-md text-sm ${
-                    item.status?.deleted
-                      ? "bg-red-100 text-red-700"
-                      : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                  }`}
+                  className="text-red-600 hover:text-red-800"
+                  title="Delete"
                 >
-                  {item.status?.deleted ? "Deleted" : "Delete"}
+                  <Trash2 className="h-5 w-5" />
                 </button>
               </td>
-              {type !== "text" && (
-                <td className="px-4 py-3">
-                  <button
-                    onClick={() => onDownload(item.id, item.url)}
-                    disabled={item.status?.downloaded}
-                    className={`px-3 py-1 rounded-md text-sm ${
-                      item.status?.downloaded
-                        ? "bg-gray-200 text-gray-700"
-                        : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                    }`}
-                  >
-                    {item.status?.downloaded 
-                      ? type === "image" ? "Displayed" : "Downloaded" 
-                      : type === "image" ? "Display" : "Download"}
-                  </button>
-                </td>
-              )}
             </tr>
           ))}
         </tbody>
@@ -118,15 +113,9 @@ DataDisplay.propTypes = {
       content: PropTypes.string,
       uploadDate: PropTypes.string,
       url: PropTypes.string,
-      status: PropTypes.shape({
-        edited: PropTypes.bool,
-        deleted: PropTypes.bool,
-        downloaded: PropTypes.bool,
-      }),
     })
   ).isRequired,
   type: PropTypes.oneOf(["pdf", "link", "image", "text"]).isRequired,
-  onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
   onDownload: PropTypes.func.isRequired,
 };
