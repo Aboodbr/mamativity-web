@@ -3,13 +3,7 @@ import { Dialog } from "@headlessui/react";
 import { X } from "lucide-react";
 import { uploadFileToCloudinary } from "@/utils/uploadToCloudinary";
 import { db } from "@/firebase";
-import {
-  collection,
-  addDoc,
-  serverTimestamp,
-  doc,
-  setDoc,
-} from "firebase/firestore";
+import { serverTimestamp, doc, setDoc, getDoc } from "firebase/firestore";
 import { useParams } from "react-router-dom";
 import { useState } from "react";
 
@@ -67,6 +61,22 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
         throw new Error("Please enter a name for the section.");
       }
 
+      // تحقق من وجود وثيقة بنفس الاسم في المجموعة الفرعية
+      const dataDocRef = doc(
+        db,
+        "months",
+        month.toLowerCase(),
+        selectedData,
+        name.toLowerCase()
+      );
+      const docSnap = await getDoc(dataDocRef);
+
+      if (docSnap.exists()) {
+        throw new Error(
+          `A document with the name "${name}" already exists. Please choose a different name.`
+        );
+      }
+
       let fileUrl = "";
       let fileSize = "";
 
@@ -94,17 +104,26 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
         throw new Error("Please select a file or enter content.");
       }
 
+      // تحديد اسم الحقل بناءً على نوع البيانات
+      const fieldName =
+        selectedData === "image"
+          ? "image"
+          : selectedData === "text"
+          ? "text"
+          : selectedData === "link"
+          ? "url"
+          : "file";
+
       const newData = {
-        name,
-        url: fileUrl,
+        createdAt: serverTimestamp(),
+        [fieldName]: fileUrl, // الحقل المتغير (image, text, url, file)
         size: fileSize,
         uploadDate: new Date().toLocaleDateString("en-US"),
-        createdAt: serverTimestamp(),
       };
 
       console.log("Data to be submitted:", newData);
 
-      // Ensure the month document exists in the months collection
+      // التأكد من وجود وثيقة الشهر في مجموعة months
       const monthDocRef = doc(db, "months", month.toLowerCase());
       await setDoc(
         monthDocRef,
@@ -112,16 +131,13 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
         { merge: true }
       );
 
-      // Save to months/{month}/{selectedData} collection
-      const docRef = await addDoc(
-        collection(db, "months", month.toLowerCase(), selectedData),
-        newData
-      );
+      // تخزين البيانات في months/{month}/{selectedData}/{name}
+      await setDoc(dataDocRef, newData);
 
-      console.log("Document added with ID:", docRef.id);
+      console.log("Document added with name:", name);
 
       try {
-        onAddData({ ...newData, id: docRef.id });
+        onAddData({ ...newData, id: name });
       } catch (addDataError) {
         console.error("Error in onAddData:", addDataError);
         throw new Error("Failed to update parent component.");

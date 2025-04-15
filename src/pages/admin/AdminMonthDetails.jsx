@@ -13,6 +13,8 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  getDoc, // إضافة getDoc
+  setDoc, // إضافة setDoc
 } from "firebase/firestore";
 
 const AdminMonthDetails = () => {
@@ -42,22 +44,34 @@ const AdminMonthDetails = () => {
           )
         );
 
-      const formatDocs = (snapshot) =>
-        snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          status: doc.data().status || {
-            edited: false,
-            deleted: false,
-            downloaded: false,
-          },
-          content: doc.data().url,
-        }));
+      const formatDocs = (snapshot, type) => {
+        // تحديد اسم الحقل بناءً على نوع البيانات
+        const fieldName =
+          type === "image"
+            ? "image"
+            : type === "text"
+            ? "text"
+            : type === "link"
+            ? "url"
+            : "file";
 
-      setPdfData(formatDocs(pdfSnapshot));
-      setPhotoData(formatDocs(imageSnapshot));
-      setLinkData(formatDocs(linkSnapshot));
-      setTextData(formatDocs(textSnapshot));
+        return snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: doc.id,
+            [fieldName]: data[fieldName],
+            size: data.size,
+            uploadDate: data.uploadDate,
+            content: data[fieldName],
+          };
+        });
+      };
+
+      setPdfData(formatDocs(pdfSnapshot, "pdf"));
+      setPhotoData(formatDocs(imageSnapshot, "image"));
+      setLinkData(formatDocs(linkSnapshot, "link"));
+      setTextData(formatDocs(textSnapshot, "text"));
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -68,9 +82,24 @@ const AdminMonthDetails = () => {
   }, [fetchData]);
 
   const handleAddData = (newData) => {
+    // تحديد اسم الحقل بناءً على selectedData
+    const fieldName =
+      selectedData === "image"
+        ? "image"
+        : selectedData === "text"
+        ? "text"
+        : selectedData === "link"
+        ? "url"
+        : "file";
+
     const newItem = {
-      ...newData,
+      id: newData.id,
+      name: newData.id,
+      [fieldName]: newData[fieldName],
+      size: newData.size,
+      uploadDate: newData.uploadDate,
       status: { edited: false, deleted: false, downloaded: false },
+      content: newData[fieldName],
     };
 
     switch (selectedData) {
@@ -84,13 +113,7 @@ const AdminMonthDetails = () => {
         setPhotoData((prev) => [...prev, newItem]);
         break;
       case "text":
-        setTextData((prev) => [
-          ...prev,
-          {
-            ...newItem,
-            content: newData.url,
-          },
-        ]);
+        setTextData((prev) => [...prev, newItem]);
         break;
       default:
         break;
@@ -102,8 +125,41 @@ const AdminMonthDetails = () => {
   const handleEdit = async (id, currentName) => {
     const newName = prompt("Enter new name:", currentName);
     if (newName && newName !== currentName) {
-      const ref = doc(db, "months", month.toLowerCase(), selectedData, id);
-      await updateDoc(ref, { name: newName, "status.edited": true });
+      // تحقق من وجود وثيقة بنفس الاسم الجديد
+      const newDocRef = doc(
+        db,
+        "months",
+        month.toLowerCase(),
+        selectedData,
+        newName.toLowerCase()
+      );
+      const docSnap = await getDoc(newDocRef);
+
+      if (docSnap.exists()) {
+        alert(
+          `A document with the name "${newName}" already exists. Please choose a different name.`
+        );
+        return;
+      }
+
+      // إنشاء وثيقة جديدة بالاسم الجديد
+      const oldDocRef = doc(
+        db,
+        "months",
+        month.toLowerCase(),
+        selectedData,
+        id
+      );
+      const oldDocSnap = await getDoc(oldDocRef);
+      const oldData = oldDocSnap.data();
+
+      await setDoc(newDocRef, {
+        ...oldData,
+        status: { ...oldData.status, edited: true },
+      });
+
+      // حذف الوثيقة القديمة
+      await deleteDoc(oldDocRef);
       fetchData();
     }
   };
@@ -120,9 +176,9 @@ const AdminMonthDetails = () => {
     }
   };
 
-  const handleDownload = async (id, url) => {
+  const handleDownload = async (id, content) => {
     if (selectedData !== "text") {
-      window.open(url, "_blank");
+      window.open(content, "_blank");
       const ref = doc(db, "months", month.toLowerCase(), selectedData, id);
       await updateDoc(ref, { "status.downloaded": true });
       fetchData();
@@ -139,12 +195,22 @@ const AdminMonthDetails = () => {
         ? photoData
         : textData;
 
-    const csv = ["Name,Size,Upload Date,URL"]
+    // تحديد اسم الحقل للتصدير
+    const fieldName =
+      selectedData === "image"
+        ? "image"
+        : selectedData === "text"
+        ? "text"
+        : selectedData === "link"
+        ? "url"
+        : "file";
+
+    const csv = ["Name,Size,Upload Date,Content"]
       .concat(
         currentData.map(
           (item) =>
             `${item.name},${item.size},${item.uploadDate},${
-              item.url || item.content || ""
+              item[fieldName] || item.content || ""
             }`
         )
       )
