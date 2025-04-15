@@ -192,10 +192,11 @@ const AdminMonthDetails = () => {
 
       <div className="flex justify-end gap-4 my-5 items-center">
         <div
-          className="relative flex flex-row gap-2 items-center cursor-pointer"
+          className="relative flex flex-row gap-1 md:gap-2 items-center cursor-pointer"
           onClick={() => setIsFilterOpen(!isFilterOpen)}
         >
-          <Filter className="size-5 text-gray-600" /> Filter By
+          <Filter className="size-5 text-gray-600" />{" "}
+          <span className="hidden sm:flex">Filter By</span>
           {isFilterOpen && (
             <div className="absolute top-8 right-0 bg-white p-6 rounded-lg shadow-md z-10">
               <Button
@@ -246,7 +247,7 @@ const AdminMonthDetails = () => {
         </Button>
       </div>
 
-      <div className="p-[3px] bg-gradient-to-r from-[#94c3fc] to-[#CBF3FF] w-full rounded-xl overflow-hidden">
+      <div className="p-[3px] bg-gradient-to-r from-[#94c3fc] to-[#CBF3FF] w-full rounded-xl overflow-x-auto">
         {sortedData.length > 0 ? (
           <DataDisplay
             data={sortedData}

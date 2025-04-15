@@ -37,7 +37,7 @@ export default function HomeLayout() {
       {/* Mobile Toggle Button */}
       <button
         onClick={toggleNav}
-        className="fixed top-4 left-4 p-2 z-[90] bg-blue-500 text-white rounded-lg md:hidden"
+        className="fixed top-9 left-4 p-2 z-[90] bg-blue-500 text-white rounded-lg md:hidden"
       >
         <Menu className="w-6 h-6 " /> {/* Menu icon */}
       </button>
@@ -54,7 +54,7 @@ export default function HomeLayout() {
 
       {/* Main Content */}
       <main
-        className={`bg-white flex-1 ml-0 md:ml-[320px] p-4 min-h-screen overflow-y-auto transition-margin duration-300`}
+        className={`bg-white flex-1 ml-0 md:ml-[320px] md:p-4 min-h-screen overflow-y-auto transition-margin duration-300`}
       >
         <Outlet />
       </main>

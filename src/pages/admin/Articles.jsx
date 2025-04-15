@@ -88,7 +88,7 @@ export default function Article() {
           className="bg-blue-100 flex items-center py-1 hover:bg-blue-200 text-black bg-gradient-to-b from-[#94c3fc] to-[#CBF3FF] border-none rounded-full px-4"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add new articles
+          Add <span className="hidden md:flex mx-1">new</span> articles
         </Link>
       </div>
 

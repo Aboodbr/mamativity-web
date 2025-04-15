@@ -10,7 +10,7 @@ import PropTypes from "prop-types";
 
 const DataDisplay = ({ data, type, onDelete, onDownload }) => {
   return (
-    <div className="w-full rounded-lg overflow-hidden bg-white">
+    <div className="w-full rounded-lg overflow-x-auto bg-white">
       <table className="w-full">
         <thead className="bg-gray-50">
           <tr>

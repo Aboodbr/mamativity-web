@@ -41,7 +41,7 @@ export default function ContentManagement() {
         <button
           onClick={() => setActiveTab("pregnancy")}
           className={cn(
-            "px-6 py-2 rounded-full text-sm font-medium transition-colors",
+            "px-4 py-1 md:px-6 md:py-2 rounded-full text-sm font-medium transition-colors",
             activeTab === "pregnancy"
               ? "bg-gradient-to-b from-[#94c3fc] to-[#CBF3FF] border-none"
               : "bg-white border border-blue-200 text-gray-700 hover:bg-gray-50"
@@ -52,7 +52,7 @@ export default function ContentManagement() {
         <button
           onClick={() => setActiveTab("childcare")}
           className={cn(
-            "px-6 py-2 rounded-full text-sm font-medium transition-colors",
+            "px-4 py-1 md:px-6 md:py-2 rounded-full text-sm font-medium transition-colors",
             activeTab === "childcare"
               ? "bg-gradient-to-b from-[#94c3fc] to-[#CBF3FF] border-none"
               : "bg-white border border-blue-200 text-gray-700 hover:bg-gray-50"
