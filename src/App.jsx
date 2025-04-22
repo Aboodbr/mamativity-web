@@ -24,6 +24,7 @@ import ContentManagement from "./pages/admin/ContentManagement";
 import AdminMonthDetails from "./pages/admin/AdminMonthDetails";
 import Articles from "./pages/admin/Articles";
 import NewArticle from "./pages/admin/NewArticle";
+import PregnancyGuide from "./pages/PregnancyProblemsDetail";
 
 function App() {
   return (
@@ -32,8 +33,8 @@ function App() {
       {/* Main Routes  */}
       <Route path="/" element={<HomeLayout />}>
         <Route path="home" index element={<Home />} />
-        <Route path="months-of-pregnancy" element={<PregnancyProblems />} />
-        <Route path="pregnancy-problems" element={<MonthsOfPregnancy />} />
+        <Route path="months-of-pregnancy" element={<MonthsOfPregnancy />} />
+        <Route path="pregnancy-problems" element={<PregnancyProblems />} />
         <Route path="maternity-bag" element={<MaternityBag />} />
         <Route path="mothers-health" element={<MothersHealth />} />
         <Route path="children-newborns" element={<ChildrenNewborns />} />
@@ -44,6 +45,7 @@ function App() {
         <Route path="breastfeeding" element={<Breastfeeding />} />
         <Route path="settings" element={<Settings />} />
         <Route path="month/:monthId" element={<MonthDetails />} />
+        <Route path="pregnancy-problems/:monthId" element={<PregnancyGuide />} />
       </Route>
 
 
