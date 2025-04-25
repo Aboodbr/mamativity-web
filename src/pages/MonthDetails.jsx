@@ -1,221 +1,331 @@
 import { useParams } from "react-router-dom";
-import pregnancyData from "../data/pregnancyData.json";
-
-import month1 from "@/assets/month1.png";
-import month2 from "@/assets/month2.png";
-import month3 from "@/assets/month3.png";
-import month4 from "@/assets/month4.png";
-import month5 from "@/assets/month5.png";
-import month6 from "@/assets/month6.png";
-import month7 from "@/assets/month7.png";
-import month8 from "@/assets/month8.png";
-
-import m1e1 from "@/assets/m1e1.png";
-import m1e2 from "@/assets/m1e2.png";
-import m1e3 from "@/assets/m1e3.png";
-import m1e4 from "@/assets/m1e4.png";
-import m1e5 from "@/assets/m1e5.png";
-import m1e6 from "@/assets/m1e6.png";
-import { Bell, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
+import { db } from "../firebase";
+import { collection, getDocs } from "firebase/firestore";
+import {
+  Dumbbell,
+  Apple,
+  Pill,
+  Droplet,
+  Lightbulb,
+  Camera,
+  Link2,
+  Youtube,
+  ExternalLink,
+  Loader2,
+  AlertCircle,
+  Home,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 import SearchNav from "@/components/SearchNav";
 
 const MonthDetails = () => {
   const { monthId } = useParams();
-  const decodedMonthId = decodeURIComponent(monthId || ""); 
+  const decodedMonthId = decodeURIComponent(monthId || "");
 
-  const month = pregnancyData.find((m) => m.slug === decodedMonthId);
+  const [sections, setSections] = useState([]);
+  const [introductionText, setIntroductionText] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const m1Es = [m1e1, m1e2, m1e3, m1e4, m1e5, m1e6];
+  const monthMap = {
+    "first-month": "first",
+    "second-month": "second",
+    "third-month": "third",
+    "fourth-month": "fourth",
+    "fifth-month": "fifth",
+    "sixth-month": "sixth",
+    "seventh-month": "seventh",
+    "eighth-month": "eighth",
+    "ninth-month": "ninth",
+  };
 
-  if (!month) {
+  const monthDisplayName = decodedMonthId
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+  useEffect(() => {
+    const fetchFirestoreData = async () => {
+      try {
+        const firestoreMonthId = monthMap[decodedMonthId];
+        if (!firestoreMonthId) {
+          setLoading(false);
+          return;
+        }
+
+        const [imagesSnapshot, linksSnapshot, textSnapshot] = await Promise.all(
+          [
+            getDocs(collection(db, "months", firestoreMonthId, "image")),
+            getDocs(collection(db, "months", firestoreMonthId, "link")),
+            getDocs(collection(db, "months", firestoreMonthId, "text")),
+          ]
+        );
+
+        const newFirestoreTexts = {};
+        textSnapshot.forEach((doc) => {
+          newFirestoreTexts[doc.id] = doc.data().text;
+        });
+
+        const introText =
+          newFirestoreTexts["introduction"] ||
+          "During this month of pregnancy, it's important to take special care of health as it plays a major role in fetal development.";
+        delete newFirestoreTexts["introduction"];
+
+        const imagesBySection = {};
+        imagesSnapshot.forEach((doc) => {
+          const url = doc.data().image;
+          const docId = doc.id.toLowerCase();
+          if (url) {
+            Object.keys(newFirestoreTexts).forEach((sectionKey) => {
+              const cleanedSectionKey = sectionKey
+                .replace(/^\d+(\.\d+)?\s*/, "")
+                .replace(/\./g, "")
+                .replace(/:$/, "")
+                .toLowerCase()
+                .trim();
+              const cleanedDocId = docId
+                .replace(/^\d+(\.\d+)?\s*/, "")
+                .replace(/\./g, "")
+                .replace(/:$/, "")
+                .toLowerCase()
+                .trim();
+              if (cleanedDocId === cleanedSectionKey) {
+                if (!imagesBySection[sectionKey]) {
+                  imagesBySection[sectionKey] = [];
+                }
+                imagesBySection[sectionKey].push(url);
+              }
+            });
+          }
+        });
+
+        const linksBySection = {};
+        linksSnapshot.forEach((doc) => {
+          const url = doc.data().url;
+          const docId = doc.id.toLowerCase();
+          if (url) {
+            Object.keys(newFirestoreTexts).forEach((sectionKey) => {
+              const cleanedSectionKey = sectionKey
+                .replace(/^\d+(\.\d+)?\s*/, "")
+                .replace(/\./g, "")
+                .replace(/:$/, "")
+                .toLowerCase()
+                .trim();
+              const cleanedDocId = docId
+                .replace(/^\d+(\.\d+)?\s*/, "")
+                .replace(/\./g, "")
+                .replace(/:$/, "")
+                .toLowerCase()
+                .trim();
+              if (cleanedDocId === cleanedSectionKey) {
+                if (!linksBySection[sectionKey]) {
+                  linksBySection[sectionKey] = [];
+                }
+                linksBySection[sectionKey].push(url);
+              }
+            });
+          }
+        });
+
+        const newSections = [];
+        Object.keys(newFirestoreTexts).forEach((sectionKey) => {
+          const cleanedTitle = sectionKey
+            .replace(/^\d+(\.\d+)?\s*/, "")
+            .replace(/:$/, "")
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+          const section = {
+            title: cleanedTitle,
+            text: newFirestoreTexts[sectionKey] || "Loading...",
+            images: imagesBySection[sectionKey] || [],
+            links: linksBySection[sectionKey] || [],
+          };
+          newSections.push(section);
+        });
+
+        setIntroductionText(introText);
+        setSections(newSections);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching Firestore data:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchFirestoreData();
+  }, [decodedMonthId]);
+
+  if (loading) {
     return (
-      <div className="p-6 text-center">
-        <h2 className="text-2xl font-bold text-red-500">Month not found</h2>
-        <p className="text-lg mt-4">
-          Please check the URL or go back to the home page.
-        </p>
+      <div className="px-6 py-12 min-h-screen bg-gradient-to-br from-pink-50 to-blue-50">
+        <SearchNav />
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white/90 p-10 rounded-3xl shadow-lg">
+            <div className="flex flex-col items-center justify-center gap-4 h-64">
+              <Loader2 className="w-12 h-12 text-pink-500 animate-spin" />
+              <p className="text-lg text-gray-700">Loading data...</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="px-6">
-      <SearchNav />
-      <div className="relative flex flex-col justify-center items-center">
-  <img
-    className="w-full"
-    src={
-      month.image === "month1"
-        ? month1
-        : month.image === "month2"
-        ? month2
-        : month.image === "month3"
-        ? month3
-        : month.image === "month4"
-        ? month4
-        : month.image === "month5"
-        ? month5
-        : month.image === "month6"
-        ? month6
-        : month.image === "month7"
-        ? month7
-        : month.image === "month8"
-        ? month8
-        : ""
+  if (sections.length === 0 && !introductionText) {
+    return (
+      <div className="px-6 py-12 min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 flex flex-col items-center justify-center">
+        <SearchNav />
+        <div className="max-w-4xl mx-auto bg-white/90 p-10 rounded-3xl shadow-lg text-center">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-red-600 mb-2">
+            Month Not Found
+          </h2>
+          <p className="text-lg text-gray-700 mb-6">
+            The page you are looking for is not available.
+          </p>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 bg-pink-500 hover:bg-pink-600 text-white font-medium px-6 py-3 rounded-full shadow-md transition-all duration-300"
+          >
+            <Home className="w-5 h-5" />
+            Return to Homepage
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const getSectionIcon = (title) => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes("exercise"))
+      return <Dumbbell className="w-8 h-8 text-pink-600" />;
+    if (lowerTitle.includes("diet"))
+      return <Apple className="w-8 h-8 text-pink-600" />;
+    if (lowerTitle.includes("essential") || lowerTitle.includes("vitamins"))
+      return <Pill className="w-8 h-8 text-pink-600" />;
+    if (lowerTitle.includes("water") || lowerTitle.includes("hydration"))
+      return <Droplet className="w-8 h-8 text-pink-600" />;
+    if (lowerTitle.includes("tips"))
+      return <Lightbulb className="w-8 h-8 text-pink-600" />;
+    return null;
+  };
+
+  const renderTextWithBreaks = (text) => {
+    const parts = text.split("-");
+    return parts.map((part, index) => (
+      <span key={index}>
+        • {part.trim()}
+        {index < parts.length - 1 && <br />}
+      </span>
+    ));
+  };
+
+  const getGridCols = (title) => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes("diet")) {
+      return "grid-cols-1 md:grid-cols-3";
     }
-    alt={`Month ${month.details.title}`} 
-  />
+    return "grid-cols-1 md:grid-cols-2";
+  };
 
-  <h1 className="absolute top-0 right-0 bg-[#FFCFFA] text-xl md:text-3xl font-light w-32 md:w-40 shadow-inner text-center rounded-3xl py-2 md:py-3 text-blue-500 before:absolute before:inset-0 before:rounded-3xl before:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.2)]">
-    {month.details.title}
-  </h1>
+  return (
+    <div className="px-4 py-12 min-h-screen bg-gradient-to-br from-pink-50 to-blue-50">
+      <SearchNav />
+      <div className="max-w-6xl mx-auto">
+        <header className="text-center mb-16">
+          <h1 className="text-5xl font-bold text-pink-700 bg-white/80 backdrop-blur-sm inline-block px-8 py-4 rounded-full shadow-lg border-2 border-pink-200 hover:shadow-xl transition-shadow duration-300">
+            {monthDisplayName}
+          </h1>
+        </header>
 
-  <p className="mb-6 bg-gradient-to-r from-[#FFCFFA] to-[#CBF3FF] rounded-2xl font-light px-4 md:px-5 py-6 md:py-8 text-center text-xl md:text-3xl w-[90%] md:w-[95%] -mt-12 md:-mt-16">
-    {month.details.week}
-  </p>
-</div>
-      <div className="bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] p-10 rounded-2xl">
-        <p className=" mb-16 mt-5 text-left font-medium text-xl">
-          {month.details.description}
-        </p>
+        <div className="bg-white/90 backdrop-blur-sm p-8 rounded-3xl shadow-lg">
+          {introductionText && (
+            <div className="relative bg-gradient-to-r from-pink-100 to-blue-100 p-8 rounded-2xl mb-16 shadow-inner border border-pink-200">
+              <div className="absolute -top-3 -left-3 bg-pink-500 text-white text-sm font-bold px-3 py-1 rounded-full">
+                Introduction
+              </div>
+              <p className="text-xl text-gray-800 leading-relaxed text-justify">
+                {introductionText}
+              </p>
+            </div>
+          )}
 
-        {month.details.sections?.length > 0 ? (
-          month.details.sections.map((section, index) => (
-            <section key={index} className="mb-8 border-b pb-6">
-              <h2 className="text-3xl font-bold mb-4">{section.title}</h2>
-              <p className="text-lg mb-4">{section.content}</p>
-
-              {Array.isArray(section.recommended) &&
-                section.recommended.length > 0 && (
-                  <div className="mb-4">
-                    <h3 className="text-2xl font-semibold mb-2 mt-14">
-                      Recommended:
-                    </h3>
-                    <ul className="list-disc pl-6 space-y-4">
-                      {section.recommended.map((item, i) => (
-                        <li
-                          key={i}
-                          className="text-lg font-medium tracking-wide"
-                        >
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-              {Array.isArray(section.avoid) && section.avoid.length > 0 && (
-                <div className="mb-4">
-                  <h3 className="text-2xl font-semibold text-red-500 mb-2 mt-14">
-                    Avoid:
-                  </h3>
-                  <ul className="list-disc pl-6 text-red-500 space-y-4">
-                    {section.avoid.map((item, i) => (
-                      <li
-                        key={i}
-                        className="text-lg  font-medium tracking-wide"
-                      >
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
+          {sections.map((section, index) => (
+            <section
+              key={index}
+              className="relative bg-white p-8 rounded-2xl mb-16 shadow-md border-t-4 border-pink-400 hover:shadow-lg transition-all duration-300 group"
+            >
+              <div className="flex items-center mb-6 gap-4">
+                <div className="bg-pink-100 p-3 rounded-full">
+                  {getSectionIcon(section.title) || (
+                    <Lightbulb className="w-8 h-8 text-pink-600" />
+                  )}
                 </div>
-              )}
+                <h2 className="text-3xl font-bold text-gray-800">
+                  {section.title}
+                </h2>
+              </div>
 
-              {Array.isArray(section.tips) && section.tips.length > 0 && (
+              <div className="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
+                <p className="text-lg text-gray-700 leading-relaxed">
+                  {renderTextWithBreaks(section.text)}
+                </p>
+              </div>
+
+              {section.images.length > 0 && (
                 <>
-                  <div className="mb-4 mt-14">
-                    {section.tips.map((tip, i) => (
-                      <div key={i} className="pl-10">
-                        <h2 className="text-black block transition-all mb-4 font-medium text-2xl">
-                          {tip.title}
-                        </h2>
-                        <h3 className="text-gray-900 block transition-all mb-4 text-lg pl-5">
-                          {tip.duration}
-                        </h3>
-                        <p className="text-gray-900 block transition-all mb-4 text-lg pl-5">
-                          {tip.description}
-                        </p>
+                  <h3 className="text-xl font-semibold mb-6 text-gray-700 flex items-center gap-2">
+                    <Camera className="w-5 h-5 text-pink-500" />
+                    Illustrations
+                  </h3>
+                  <div className={`grid ${getGridCols(section.title)} gap-6`}>
+                    {section.images.map((item, i) => (
+                      <div
+                        key={i}
+                        className="relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group"
+                      >
+                        <img
+                          className="w-full h-[512px] object-contain transition-transform duration-500 group-hover:scale-105"
+                          src={item}
+                          alt={`${section.title} image ${i + 1}`}
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                          <span className="text-white font-medium">
+                            {section.title} - Image {i + 1}
+                          </span>
+                        </div>
                       </div>
                     ))}
-                  </div>
-                  <div className="mb-4">
-                    <h3 className="text-4xl font-semibold mb-10 mt-14 text-center underline">
-                      Here are some yoga exercises:
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 justify-center gap-4">
-                      {monthId === "first-month" &&
-                        m1Es.map((item, i) => (
-                          <img
-                            key={i}
-                            className="w-full object-cover rounded-lg shadow-lg"
-                            src={item}
-                            alt={`Yoga Exercise ${i + 1}`}
-                          />
-                        ))}
-                    </div>
                   </div>
                 </>
               )}
 
-              {Array.isArray(section.tips) && section.tips.length > 0 && (
-                <div className="mb-4 mt-14">
-                  {section.tips.map((tip, i) => (
-                    <div key={i} className="pl-10">
-                      <h2 className="text-black block transition-all mb-4 font-medium text-2xl">
-                        {tip.title}
-                      </h2>
-                      <h3 className="text-gray-900 block transition-all mb-4 text-lg pl-5">
-                        {tip.duration}
-                      </h3>
-                      <p className="text-gray-900 block transition-all mb-4 text-lg pl-5">
-                        {tip.description}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {Array.isArray(section.items) && section.items.length > 0 && (
-                <div className="mb-4 mt-14">
-                  {section.items.map((item, i) => (
-                    <div key={i} className="pl-5">
-                      <h2 className="text-black block transition-all mb-4 font-medium text-2xl">
-                        {item.name}
-                      </h2>
-
-                      <p className="text-gray-900 block transition-all mb-4 text-lg pl-2">
-                        {item.description}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {Array.isArray(section.videos) && section.videos.length > 0 && (
-                <div className="mb-4">
-                  <h3 className="text-2xl font-semibold mb-2 mt-14 text-center underline">
-                    Watch some yoga videos:
+              {section.links.length > 0 && (
+                <>
+                  <h3 className="text-xl font-semibold mb-6 text-gray-700 flex items-center gap-2 mt-10">
+                    <Link2 className="w-5 h-5 text-pink-500" />
+                    Useful Links
                   </h3>
-                  {section.videos.map((video, i) => (
-                    <a
-                      key={i}
-                      href={video.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-900 underline block hover:text-blue-700 transition-all mb-4"
-                    >
-                      {video.title}
-                    </a>
-                  ))}
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {section.links.map((video, i) => (
+                      <a
+                        key={i}
+                        href={video}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border border-blue-200"
+                      >
+                        <Youtube className="w-5 h-5 text-red-500" />
+                        <span>{`Video ${i + 1} about ${section.title}`}</span>
+                        <ExternalLink className="w-4 h-4 ml-auto opacity-70" />
+                      </a>
+                    ))}
+                  </div>
+                </>
               )}
             </section>
-          ))
-        ) : (
-          <p className="text-gray-500">No additional details available.</p>
-        )}
+          ))}
+        </div>
       </div>
     </div>
   );
