@@ -1,9 +1,9 @@
-import { Filter, Upload } from "lucide-react";
+import { Filter, Upload, Trash2 } from "lucide-react"; // إضافة أيقونة Trash2
 import { useState, useEffect, useRef, useCallback } from "react";
 import VaccinationTable from "./vaccination-table";
 import AddFileModal from "../modals/AddFileModal";
 import { db } from "@/firebase";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore"; // استبدال updateDoc بـ deleteDoc
 
 const VaccinationScheduless = ({ searchTerm }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -18,11 +18,10 @@ const VaccinationScheduless = ({ searchTerm }) => {
     try {
       const recordsSnapshot = await getDocs(collection(db, "Vaccinations"));
       const recordsData = recordsSnapshot.docs.map((doc) => ({
-        id: doc.id, // استخدام معرف المستند كـ id
-        vaccineName: doc.id, // اسم التطعيم (معرف المستند)
+        id: doc.id,
+        vaccineName: doc.id,
         ...doc.data(),
-        isDeleted: doc.data().isDeleted || false, // إضافة حالة الحذف
-        isEdited: doc.data().isEdited || false, // إضافة حالة التعديل
+        isEdited: doc.data().isEdited || false,
       }));
       setRecords(recordsData);
       console.log("Fetched records:", recordsData);
@@ -47,7 +46,7 @@ const VaccinationScheduless = ({ searchTerm }) => {
   const sortedRecords = [...filteredRecords].sort((a, b) => {
     if (!sortBy) return 0;
     if (sortBy === "name") return a.vaccineName.localeCompare(b.vaccineName);
-    if (sortBy === "date") return a.createdAt - b.createdAt; // ترتيب حسب تاريخ الإنشاء
+    if (sortBy === "date") return a.createdAt - b.createdAt;
     if (sortBy === "size") return a.doseSize.localeCompare(b.doseSize);
     return 0;
   });
@@ -74,36 +73,34 @@ const VaccinationScheduless = ({ searchTerm }) => {
   // إضافة سجل جديد
   const handleAddFile = (newFile) => {
     const newRecord = {
-      id: newFile.vaccineName.toLowerCase(), // استخدام vaccineName كمعرف
+      id: newFile.vaccineName.toLowerCase(),
       vaccineName: newFile.vaccineName,
       age: newFile.age,
       disease: newFile.disease,
       doseSize: newFile.doseSize,
       method: newFile.method,
       createdAt: newFile.createdAt,
-      isDeleted: false,
       isEdited: false,
     };
     setRecords((prev) => [...prev, newRecord]);
-    fetchRecords(); // إعادة جلب البيانات من Firestore للتأكد من التحديث
+    fetchRecords();
   };
 
-  // حذف سجل
+  // حذف سجل فعلي من Firestore
   const handleDelete = async (id) => {
     try {
+      console.log(`Attempting to delete record with ID: ${id}`);
       const recordRef = doc(db, "Vaccinations", id);
-      await updateDoc(recordRef, { isDeleted: true });
-      setRecords(
-        records.map((record) =>
-          record.id === id ? { ...record, isDeleted: true } : record
-        )
-      );
+      await deleteDoc(recordRef); // الحذف الفعلي من Firestore
+      console.log(`Record with ID: ${id} deleted from Firestore`);
+      setRecords(records.filter((record) => record.id !== id)); // إزالة السجل من الحالة
+      console.log("Updated records state after deletion");
     } catch (error) {
       console.error("Error deleting record:", error);
     }
   };
 
-  // تعديل سجل (غير مستخدم حاليًا، لكن سنتركه للاحتياط)
+  // تعديل سجل
   const handleEdit = async (id) => {
     try {
       const recordRef = doc(db, "Vaccinations", id);

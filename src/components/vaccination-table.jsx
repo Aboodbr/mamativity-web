@@ -30,37 +30,45 @@ export default function VaccinationTable({ records, onDelete }) {
             </tr>
           </thead>
           <tbody>
-            {records.map((record) => (
-              <tr key={record.id} className="border-b border-blue-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex">
-                    <span className="font-medium">{record.vaccineName}</span>
-                  </div>
+            {records.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                  No records found.
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">{record.age}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {record.disease}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {record.doseSize}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">{record.method}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {record.isDeleted ? (
-                    <span className="inline-block px-4 py-1 bg-red-100 text-red-500 rounded-md">
-                      Deleted
-                    </span>
-                  ) : (
+              </tr>
+            ) : (
+              records.map((record) => (
+                <tr
+                  key={record.id}
+                  className="border-b border-blue-50 hover:bg-blue-50"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex">
+                      <span className="font-medium">{record.vaccineName}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{record.age}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {record.disease}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {record.doseSize}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {record.method}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <button
                       onClick={() => onDelete(record.id)}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-red-500 hover:text-red-700 transition-colors duration-200"
+                      title="Delete this record"
                     >
                       <Trash2 className="size-5" />
                     </button>
-                  )}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
