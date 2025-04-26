@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signInWithEmailAndPassword } from "firebase/auth"; // استيراد تسجيل الدخول
-import { auth } from "@/firebase"; // استيراد Firebase
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import StateModal from "@/modals/StatusModal";
@@ -14,11 +15,25 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate(); // لاستخدام التوجيه بعد تسجيل الدخول
+  const navigate = useNavigate();
 
   function close() {
     setIsOpen(false);
   }
+
+  //to update status and time active
+  const updateLastActive = async (userId) => {
+    try {
+      const userRef = doc(db, "users", userId);
+      await updateDoc(userRef, {
+        lastActive: serverTimestamp(),
+        status: "Active",
+      });
+      console.log(`User ${userId} lastActive updated`);
+    } catch (error) {
+      console.error("Error updating lastActive:", error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,7 +44,10 @@ export default function SignIn() {
         email,
         password
       );
-      console.log("Logged in user:", userCredential.user); // ✅ طباعة بيانات المستخدم
+      const userId = userCredential.user.uid;
+      console.log("Logged in user:", userCredential.user);
+
+      await updateLastActive(userId);
 
       Swal.fire({
         icon: "success",
@@ -37,7 +55,7 @@ export default function SignIn() {
         text: "You have successfully logged in!",
         confirmButtonText: "Proceed to Home",
       }).then(() => {
-        navigate("/home"); // ✅ إعادة التوجيه بعد تسجيل الدخول
+        navigate("/home");
       });
     } catch (error) {
       Swal.fire({
@@ -52,7 +70,7 @@ export default function SignIn() {
   return (
     <div className="min-h-screen flex justify-between BG">
       <div className="space-y-8 bg-gradient-to-b from-[#FFCFFA] to-[#CBF3FF] rounded-tr-[70px] w-full md:w-[50%] pt-10">
-        <div className="w-32 mx-auto ">
+        <div className="w-32 mx-auto">
           <img
             src={logo}
             alt="Mamativity Logo"
@@ -61,7 +79,6 @@ export default function SignIn() {
             className="object-contain"
           />
         </div>
-
         <form
           onSubmit={handleSubmit}
           className="space-y-6 flex flex-col justify-center px-8 lg:px-20 pt-20"
@@ -92,10 +109,10 @@ export default function SignIn() {
             Next
           </Button>
           <div className="flex justify-between text-sm px-4">
-            <Link to="/signup" className=" hover:underline">
+            <Link to="/signup" className="hover:underline">
               Sign up
             </Link>
-            <Link to="/forgot-password" className=" hover:underline">
+            <Link to="/forgot-password" className="hover:underline">
               Forgot password?
             </Link>
           </div>
