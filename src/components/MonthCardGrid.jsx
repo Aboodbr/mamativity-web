@@ -16,14 +16,28 @@ function MonthCard({ month, topics }) {
       <Link to={`/admin/content-management/${month}`}>
         <div className="bg-white rounded-xl overflow-hidden">
           <div className="text-center font-medium text-gray-700 rounded-t-lg p-[3px] bg-gradient-to-r from-[#94c3fc] to-[#CBF3FF]">
-            <div className="bg-white rounded-t-lg py-2 px-4">
-              {month} month
-            </div>
+            <div className="bg-white rounded-t-lg py-2 px-4">{month} month</div>
           </div>
 
           <div className="p-3 space-y-3">
+            <h3
+              className="text-lg font-semibold text-blue-600 mb-2"
+              style={{ color: "#1E90FF" }}
+            >
+              Month Details:
+            </h3>
             {topics.map((topic) => (
-              <TopicItem key={topic.id} topic={topic} />
+              <div key={topic.id}>
+                {topic.id === 5 && (
+                  <h3
+                    className="text-lg font-semibold text-blue-600 mb-2"
+                    style={{ color: "#1E90FF" }}
+                  >
+                    Months of Pregnancy:
+                  </h3>
+                )}
+                <TopicItem topic={topic} />
+              </div>
             ))}
           </div>
         </div>
@@ -35,9 +49,7 @@ function MonthCard({ month, topics }) {
 function TopicItem({ topic }) {
   return (
     <div className="flex items-center rounded-md p-2 text-sm text-gray-600">
-      <span className="text-gray-500 mr-2">
-        Topic {topic.id}:
-      </span>
+      <span className="text-gray-500 mr-2">Topic {topic.id}:</span>
       <span className="bg-white border border-gray-400/20 rounded-full px-1 font-semibold">
         {topic.title}
       </span>

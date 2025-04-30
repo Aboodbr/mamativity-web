@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import SearchNav from "@/components/SearchNav";
-import MonthCardGrid from "@/components/MonthCardGrid"; // Import the new component
+import MonthCardGrid from "@/components/MonthCardGrid";
 import ChildCare from "@/components/ChildCare";
 
 export default function ContentManagement() {
@@ -25,6 +25,12 @@ export default function ContentManagement() {
     { id: 2, title: "Vitamins and Supplements" },
     { id: 3, title: "Foods rich in folic acid" },
     { id: 4, title: "Drink plenty of water" },
+    { id: 5, title: "Common problems" },
+    { id: 6, title: "How to deal with it" },
+    { id: 7, title: "Healthy foods" },
+    { id: 8, title: "Suggested drinks" },
+    { id: 9, title: "Appropriate exercises" },
+    { id: 10, title: "When should you see a doctor" },
   ];
 
   // Filter months based on search term
@@ -62,10 +68,26 @@ export default function ContentManagement() {
         </button>
       </div>
 
+      {/* Formatted Title */}
+      <div>
+        <h1
+          className="text-center font-sans text-2xl md:text-3xl font-bold mb-8"
+          style={{ fontFamily: "Arial, sans-serif" }}
+        >
+          <span style={{ color: "#1E90FF" }}>
+            Month Details And Months of Pregnancy
+          </span>
+        </h1>
+        <p className="text-center text-gray-900 mb-6 text-sm sm:text-base">
+          Explore detailed insights for each pregnancy month or childcare tips.
+        </p>
+      </div>
+
       {/* Month Cards Grid */}
-      { activeTab === "pregnancy" && <MonthCardGrid months={filteredMonths} topics={topics} />}
-      { activeTab === "childcare" && <ChildCare searchTerm={searchTerm} />}
-      
+      {activeTab === "pregnancy" && (
+        <MonthCardGrid months={filteredMonths} topics={topics} />
+      )}
+      {activeTab === "childcare" && <ChildCare searchTerm={searchTerm} />}
     </div>
   );
 }
