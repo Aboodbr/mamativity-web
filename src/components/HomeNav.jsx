@@ -15,6 +15,11 @@ import navIcon6 from "@/assets/navIcon6.png";
 import navIcon7 from "@/assets/navIcon7.png";
 import navIcon8 from "@/assets/navIcon8.png";
 import navIcon9 from "@/assets/navIcon9.png";
+import navIcon10 from "@/assets/navIcon10.png";
+import navIcon11 from "@/assets/navIcon11.png";
+import navIcon12 from "@/assets/navIcon12.png";
+import navIcon13 from "@/assets/navIcon13.png";
+
 import corner from "@/assets/corner.png";
 import corner2 from "@/assets/corner2.png";
 
@@ -97,14 +102,14 @@ const HomeNav = ({ closeNav }) => {
 
   // روابط الأدمن
   const adminLinks = [
-    { name: "Admin Home", path: "admin/home", icon: navIcon8 },
-    { name: "User Management", path: "admin/user-management", icon: navIcon8 },
+    { name: "Admin Home", path: "admin/home", icon: navIcon1 },
+    { name: "User Management", path: "admin/user-management", icon: navIcon10 },
     {
       name: "Content Management",
       path: "admin/content-management",
-      icon: navIcon8,
+      icon: navIcon11,
     },
-    { name: "Articles", path: "admin/articles", icon: navIcon8 },
+    { name: "Articles", path: "admin/articles", icon: navIcon12 },
     { name: "Settings", path: "settings", icon: navIcon9 },
   ];
 
@@ -180,7 +185,7 @@ const HomeNav = ({ closeNav }) => {
             onClick={handleSignOut}
             className="mt-auto mb-4 mx-4 flex items-center justify-center gap-3 bg-white/90 text-gray-900 font-semibold text-lg py-3 px-6 rounded-full shadow-lg hover:bg-gray-100 transition-all duration-300"
           >
-            <img className="w-6" src={navIcon9} alt="Sign Out" />
+            <img className="w-6" src={navIcon13} alt="Sign Out" />
             Sign Out
           </button>
         </>
