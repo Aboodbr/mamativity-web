@@ -98,6 +98,7 @@ const HomeNav = ({ closeNav }) => {
       icon: navIcon7,
     },
     { name: "Breastfeeding", path: "breastfeeding", icon: navIcon8 },
+    { name: "Settings", path: "settings", icon: navIcon9 },
   ];
 
   // روابط الأدمن
