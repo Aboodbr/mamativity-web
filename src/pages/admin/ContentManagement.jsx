@@ -75,7 +75,7 @@ export default function ContentManagement() {
           style={{ fontFamily: "Arial, sans-serif" }}
         >
           <span style={{ color: "#1E90FF" }}>
-            Month Details And Months of Pregnancy
+            Month Details | Months of Pregnancy | Vaccinations
           </span>
         </h1>
         <p className="text-center text-gray-900 mb-6 text-sm sm:text-base">
