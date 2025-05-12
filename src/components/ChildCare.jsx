@@ -4,11 +4,12 @@ import WeightAndHeight from "./WeightAndHeight";
 import VaccinationScheduless from "./VaccinationScheduless";
 
 const ChildCare = ({ searchTerm }) => {
-    const [activeTab, setActiveTab] = useState("weight");
-    return (
-        <div>
+  const [activeTab, setActiveTab] = useState("vaccination");
+  return (
+    <div>
       {/* Tabs */}
       <div className="flex space-x-4 mb-8">
+        {/*
         <button
           onClick={() => setActiveTab("weight")}
           className={cn(
@@ -20,6 +21,7 @@ const ChildCare = ({ searchTerm }) => {
         >
           Weight and height
         </button>
+        */}
         <button
           onClick={() => setActiveTab("vaccination")}
           className={cn(
@@ -29,15 +31,16 @@ const ChildCare = ({ searchTerm }) => {
               : "bg-white border border-blue-200 text-gray-700 hover:bg-gray-50"
           )}
         >
-           (vaccination scheduless)
+          (vaccination scheduless)
         </button>
       </div>
 
       {activeTab === "weight" && <WeightAndHeight searchTerm={searchTerm} />}
-      {activeTab === "vaccination" && <VaccinationScheduless searchTerm={searchTerm} />}
+      {activeTab === "vaccination" && (
+        <VaccinationScheduless searchTerm={searchTerm} />
+      )}
+    </div>
+  );
+};
 
-        </div>
-    )
-}
-
-export default ChildCare
+export default ChildCare;
