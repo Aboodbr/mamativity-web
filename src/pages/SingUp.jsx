@@ -8,7 +8,7 @@ import logo from "@/assets/logo.png";
 import StateModal from "@/modals/StatusModal";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -51,10 +51,13 @@ export default function SignUp() {
       // تخزين البيانات في Firestore
       await setDoc(doc(db, "users", user.uid), {
         firstName: formData.firstName,
+        lastName: formData.lastName,
         phone: formData.phone,
         email: formData.email,
         createdAt: new Date(),
         role: "user",
+        status: "",
+        lastActive: serverTimestamp(),
       });
 
       // عرض رسالة النجاح

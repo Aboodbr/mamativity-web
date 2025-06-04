@@ -3,11 +3,17 @@ import { StatsCard } from "@/components/stats-card";
 import { ProgressCircle } from "@/components/progress-circle";
 import { LineChart } from "@/components/line-chart";
 import { Card } from "@/components/ui/card";
-import { Bar, BarChart, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import {
+  Bar,
+  BarChart,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  LabelList,
+} from "recharts";
 import { ChartContainer } from "@/components/ui/chart";
-import CustomBar from "@/components/custom-bar";
 import SearchNav from "@/components/SearchNav";
-
 import {
   getFirestore,
   collection,
@@ -18,55 +24,142 @@ import {
   getDocs,
 } from "firebase/firestore";
 
+const COLORS = [
+  "#4F46E5",
+  "#60A5FA",
+  "#2DD4BF",
+  "#FACC15",
+  "#EF4444",
+  "#A855F7",
+  "#22D3EE",
+  "#F97316",
+  "#10B981",
+  "#EC4899",
+];
+
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "#2563eb",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "#60a5fa",
+  articles: {
+    label: "Articles",
+    color: "#4F46E5",
   },
 };
-
-const chartData = [
-  { month: "Jan", desktop: 186, mobile: 80 },
-  { month: "Feb", desktop: 305, mobile: 200 },
-  { month: "Mar", desktop: 237, mobile: 120 },
-  { month: "Apr", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "Jun", desktop: 214, mobile: 140 },
-  { month: "Jul", desktop: 250, mobile: 160 },
-  { month: "Aug", desktop: 300, mobile: 180 },
-  { month: "Sep", desktop: 280, mobile: 170 },
-  { month: "Oct", desktop: 320, mobile: 190 },
-  { month: "Nov", desktop: 310, mobile: 175 },
-  { month: "Dec", desktop: 290, mobile: 160 },
-];
 
 export default function DashboardPage() {
   const [userCount, setUserCount] = useState(0);
   const [newClients, setNewClients] = useState(0);
+  const [articleCount, setArticleCount] = useState(0);
+  const [chartData, setChartData] = useState([]);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
-      const db = getFirestore();
+      try {
+        const db = getFirestore();
 
-      // جلب عدد المستخدمين
-      const usersCol = collection(db, "users");
-      const userSnap = await getCountFromServer(usersCol);
-      setUserCount(userSnap.data().count);
+        // 1- جلب عدد المستخدمين
+        const usersCol = collection(db, "users");
+        const userCountPromise = getCountFromServer(usersCol);
 
-      // جلب المستخدمين الجدد اليوم
-      const todayStart = Timestamp.fromDate(
-        new Date(new Date().setHours(0, 0, 0, 0))
-      );
-      const newClientsQuery = query(
-        usersCol,
-        where("createdAt", ">=", todayStart)
-      );
-      const newClientsSnap = await getDocs(newClientsQuery);
-      setNewClients(newClientsSnap.size);
+        // 2- المستخدمين الجدد خلال آخر 7 أيام
+        const sevenDaysAgo = Timestamp.fromDate(
+          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        );
+        const newClientsQuery = query(
+          usersCol,
+          where("createdAt", ">=", sevenDaysAgo)
+        );
+        const newClientsPromise = getDocs(newClientsQuery);
+
+        // 3- جلب العناوين الرئيسية للمقالات
+        const articleMainCol = collection(db, "article");
+        const titlesPromise = getDocs(articleMainCol);
+
+        // تنفيذ الثلاث وعود بالتوازي
+        const [userSnap, newClientsSnap, titleDocs] = await Promise.all([
+          userCountPromise,
+          newClientsPromise,
+          titlesPromise,
+        ]);
+
+        setUserCount(userSnap.data().count);
+        setNewClients(newClientsSnap.size);
+
+        // العناوين الفرعية داخل كل عنوان رئيسي
+        const subtitleNames = [
+          "breastfeeding-natural-",
+          "formula-feeding-artifi-",
+          "baby-care-tips",
+          "frequently-asked-questions",
+          "physical-activity",
+          "rest-and-sleep",
+          "baby-health-and-common-illnesses",
+          "child-growth-stages",
+          "complementary-feeding-introducing-solid-foods-",
+          "daily-baby-care",
+          "sensory-and-motor-skills-development",
+          "general-women-s-health",
+          "women-s-health-after-childbirth",
+          "women-s-health-before-pregnancy",
+          "women-s-health-during-pregnancy",
+        ];
+
+        let totalArticles = 0;
+        const categoryMap = {};
+
+        // هنا نستخدم Promise.all لجلب المجموعات الفرعية بالتوازي لكل عنوان رئيسي
+        const allSubCollectionsPromises = [];
+
+        titleDocs.docs.forEach((titleDoc) => {
+          const titleId = titleDoc.id;
+
+          subtitleNames.forEach((subtitle) => {
+            const subCollectionRef = collection(
+              db,
+              "article",
+              titleId,
+              subtitle
+            );
+            allSubCollectionsPromises.push(
+              getDocs(subCollectionRef).then((subSnap) => {
+                subSnap.forEach((doc) => {
+                  const data = doc.data();
+                  const category = data.category || subtitle;
+                  totalArticles += 1;
+
+                  if (categoryMap[category]) {
+                    categoryMap[category].articles += 1;
+                  } else {
+                    categoryMap[category] = {
+                      category: category.substring(0, 15),
+                      articles: 1,
+                    };
+                  }
+                });
+              })
+            );
+          });
+        });
+
+        await Promise.all(allSubCollectionsPromises);
+
+        setArticleCount(totalArticles);
+
+        const chartData = Object.values(categoryMap)
+          .sort((a, b) => b.articles - a.articles)
+          .map((item, index) => ({
+            ...item,
+            fill: COLORS[index % COLORS.length],
+          }))
+          .slice(0, 10);
+
+        setChartData(chartData);
+      } catch (err) {
+        console.error("Error fetching stats:", err);
+        setError("Failed to load stats. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchStats();
@@ -75,52 +168,127 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto p-4 space-y-6">
       <SearchNav />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {/* عدد المستخدمين */}
-        <StatsCard title="Number of users" value={userCount.toString()}>
-          <div className="h-[100px] w-full bg-gradient-to-r from-blue-50 to-indigo-50 flex items-end p-4">
-            <div className="w-full h-[50px] bg-gradient-to-r from-blue-500 to-indigo-500 rounded-md opacity-25" />
-          </div>
-        </StatsCard>
+      {error && <div className="text-red-500">{error}</div>}
 
-        {/* المستخدمين الجدد */}
-        <StatsCard title="New Clients" value={newClients.toString()}>
-          <div className="flex items-center justify-between p-4">
-            <div className="text-xl font-bold text-muted-foreground ">
-              <div>60% Daily Goal</div>
-              <div>72 This Week</div>
-            </div>
-            <ProgressCircle value={62} />
-          </div>
-        </StatsCard>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          {/* Spinner بسيط */}
+          <svg
+            className="animate-spin h-12 w-12 text-blue-600"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            ></path>
+          </svg>
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <StatsCard title="Number of users" value={userCount.toString()}>
+              <div className="h-[100px] w-full bg-gradient-to-r from-blue-50 to-indigo-50 flex items-end p-4">
+                <div className="w-full h-[50px] bg-gradient-to-r from-blue-500 to-indigo-500 rounded-md opacity-25" />
+              </div>
+            </StatsCard>
 
-        {/* كرت المقالات (ثابت حالياً) */}
-        <StatsCard title="Number of articles" value="">
-          <div className="h-[150px] -ml-5 w-full mb-10">
-            <ChartContainer
-              config={chartConfig}
-              className="min-h-[200px] w-full"
+            <StatsCard
+              title="New Clients (Last 7 Days)"
+              value={newClients.toString()}
             >
-              <BarChart data={chartData}>
-                <XAxis dataKey="month" stroke="#8884d8" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar
-                  dataKey="desktop"
-                  shape={<CustomBar />}
-                  radius={[10, 10, 0, 0]}
+              <div className="flex items-center justify-between p-4">
+                <div className="text-xl font-bold text-muted-foreground">
+                  <div>60% Weekly Goal</div>
+                  <div>{newClients} This Week</div>
+                </div>
+                <ProgressCircle
+                  value={Math.min((newClients / 100) * 100, 100)}
                 />
-              </BarChart>
-            </ChartContainer>
-          </div>
-        </StatsCard>
-      </div>
+              </div>
+            </StatsCard>
 
-      <Card className="p-4">
-        <h2 className="text-xl font-semibold mb-4">System Performance</h2>
-        <LineChart />
-      </Card>
+            <StatsCard
+              title="Number Of Articles"
+              value={articleCount.toString()}
+            >
+              <div className="h-[200px] w-full">
+                <ChartContainer
+                  config={chartConfig}
+                  className="min-h-[250px] w-full bg-white shadow-sm rounded-lg p-2"
+                >
+                  {chartData.length > 0 ? (
+                    <BarChart
+                      data={chartData}
+                      layout="horizontal"
+                      barCategoryGap={2}
+                      margin={{ top: 20, right: 20, bottom: 60, left: 20 }}
+                    >
+                      <XAxis
+                        dataKey="category"
+                        type="category"
+                        stroke="black"
+                        interval={0}
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                        tick={{ fontSize: 15 }}
+                      />
+                      <YAxis
+                        type="number"
+                        stroke="black"
+                        domain={[0, "auto"]}
+                        tickCount={5}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "rgba(0, 0, 0, 0.8)",
+                          color: "#fff",
+                        }}
+                      />
+                      <Legend />
+                      <Bar dataKey="articles" radius={[4, 4, 0, 0]}>
+                        {chartData.map((entry, index) => (
+                          <Bar
+                            key={`bar-${index}`}
+                            dataKey="articles"
+                            fill={entry.fill}
+                          />
+                        ))}
+                        <LabelList
+                          dataKey="articles"
+                          position="top"
+                          fill="#1E293B"
+                          fontSize={12}
+                        />
+                      </Bar>
+                    </BarChart>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-gray-500">
+                      No articles available
+                    </div>
+                  )}
+                </ChartContainer>
+              </div>
+            </StatsCard>
+          </div>
+
+          <Card className="p-4">
+            <h2 className="text-xl font-semibold mb-4">Monthly User Growth</h2>
+            <LineChart />
+          </Card>
+        </>
+      )}
     </div>
   );
 }

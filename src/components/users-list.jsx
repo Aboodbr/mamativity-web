@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "@/firebase";
-import { collection, onSnapshot, doc, deleteDoc } from "firebase/firestore"; // إضافة deleteDoc
+import { collection, onSnapshot, doc, deleteDoc } from "firebase/firestore";
 import {
   Table,
   TableBody,
@@ -9,21 +9,37 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trash2 } from "lucide-react"; // استيراد أيقونة الحذف
+import { Trash2 } from "lucide-react";
 import PropTypes from "prop-types";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 export function UsersList({ searchQuery }) {
   const [users, setUsers] = useState([]);
 
-  // دالة الحذف
+  // Delete function with SweetAlert confirmation
   const handleDelete = async (userId) => {
     try {
-      console.log(`Attempting to delete user with ID: ${userId}`);
-      const userRef = doc(db, "users", userId);
-      await deleteDoc(userRef); // الحذف الفعلي من Firestore
-      console.log(`User with ID: ${userId} deleted from Firestore`);
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "Cancel",
+      });
+
+      if (result.isConfirmed) {
+        console.log(`Attempting to delete user with ID: ${userId}`);
+        const userRef = doc(db, "users", userId);
+        await deleteDoc(userRef);
+        console.log(`User with ID: ${userId} deleted from Firestore`);
+        Swal.fire("Deleted!", "The user has been deleted.", "success");
+      }
     } catch (error) {
       console.error("Error deleting user:", error);
+      Swal.fire("Error!", "Failed to delete the user.", "error");
     }
   };
 
@@ -39,7 +55,6 @@ export function UsersList({ searchQuery }) {
           phone: doc.data().phone || "No Phone",
           createdAt: doc.data().createdAt || null,
           country: "Egypt",
-          status: doc.data().status,
         }));
 
         console.log("Fetched users:", usersData);
@@ -79,7 +94,6 @@ export function UsersList({ searchQuery }) {
               <TableHead>Phone</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Country</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
@@ -104,17 +118,6 @@ export function UsersList({ searchQuery }) {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.country}</TableCell>
                   <TableCell>
-                    <span
-                      className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold ${
-                        user.status === "Active"
-                          ? "bg-gradient-to-b from-[#94c3fc] to-[#CBF3FF]"
-                          : "bg-red-100 text-red-800 px-4 py-2"
-                      }`}
-                    >
-                      {user.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
                     <button
                       onClick={() => handleDelete(user.id)}
                       className="text-red-500 hover:text-red-700 transition-colors duration-200"
@@ -127,7 +130,7 @@ export function UsersList({ searchQuery }) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-5">
+                <TableCell colSpan={6} className="text-center py-5">
                   No users found
                 </TableCell>
               </TableRow>

@@ -1,8 +1,26 @@
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Trash2 } from "lucide-react"; // استيراد أيقونة الحذف
+import PropTypes from "prop-types";
+import { Trash2 } from "lucide-react";
+import Swal from "sweetalert2";
 
 export default function VaccinationTable({ records, onDelete }) {
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won’t be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onDelete(id);
+        Swal.fire("Deleted!", "The record has been deleted.", "success");
+      }
+    });
+  };
+
   return (
     <div className="w-full overflow-hidden flex justify-center mt-10">
       <div className="overflow-x-auto w-full border border-blue-100 rounded-xl">
@@ -42,10 +60,8 @@ export default function VaccinationTable({ records, onDelete }) {
                   key={record.id}
                   className="border-b border-blue-50 hover:bg-blue-50"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex">
-                      <span className="font-medium">{record.vaccineName}</span>
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap font-medium">
+                    {record.vaccineName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">{record.age}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -59,7 +75,7 @@ export default function VaccinationTable({ records, onDelete }) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
-                      onClick={() => onDelete(record.id)}
+                      onClick={() => handleDelete(record.id)}
                       className="text-red-500 hover:text-red-700 transition-colors duration-200"
                       title="Delete this record"
                     >
@@ -75,3 +91,17 @@ export default function VaccinationTable({ records, onDelete }) {
     </div>
   );
 }
+
+VaccinationTable.propTypes = {
+  records: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      vaccineName: PropTypes.string,
+      age: PropTypes.string,
+      disease: PropTypes.string,
+      doseSize: PropTypes.string,
+      method: PropTypes.string,
+    })
+  ).isRequired,
+  onDelete: PropTypes.func.isRequired,
+};

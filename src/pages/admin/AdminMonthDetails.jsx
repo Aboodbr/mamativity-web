@@ -13,8 +13,8 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  getDoc, // إضافة getDoc
-  setDoc, // إضافة setDoc
+  getDoc,
+  setDoc,
 } from "firebase/firestore";
 
 const AdminMonthDetails = () => {
@@ -24,6 +24,7 @@ const AdminMonthDetails = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const [pdfData, setPdfData] = useState([]);
   const [linkData, setLinkData] = useState([]);
@@ -34,46 +35,52 @@ const AdminMonthDetails = () => {
     parseFloat(sizeStr?.replace(/[^\d.]/g, "") || 0);
 
   const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
       const collections = ["pdf", "image", "link", "text"];
+      const collectionSources = [
+        { name: "months", displayName: "Month Details" },
+        { name: "Months of Pregnancy", displayName: "Months of Pregnancy" },
+      ];
 
-      const [pdfSnapshot, imageSnapshot, linkSnapshot, textSnapshot] =
-        await Promise.all(
-          collections.map((col) =>
-            getDocs(collection(db, "months", month.toLowerCase(), col))
-          )
-        );
+      const allData = { pdf: [], image: [], link: [], text: [] };
 
-      const formatDocs = (snapshot, type) => {
-        // تحديد اسم الحقل بناءً على نوع البيانات
-        const fieldName =
-          type === "image"
-            ? "image"
-            : type === "text"
-            ? "text"
-            : type === "link"
-            ? "url"
-            : "file";
+      for (const source of collectionSources) {
+        for (const col of collections) {
+          const colRef = collection(db, source.name, month.toLowerCase(), col);
+          const snapshot = await getDocs(colRef);
+          const fieldName =
+            col === "image"
+              ? "image"
+              : col === "text"
+              ? "text"
+              : col === "link"
+              ? "url"
+              : "file";
 
-        return snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            name: doc.id,
-            [fieldName]: data[fieldName],
-            size: data.size,
-            uploadDate: data.uploadDate,
-            content: data[fieldName],
-          };
-        });
-      };
+          snapshot.docs.forEach((doc) => {
+            const data = doc.data();
+            allData[col].push({
+              id: doc.id,
+              name: doc.id,
+              [fieldName]: data[fieldName],
+              size: data.size,
+              uploadDate: data.uploadDate,
+              content: data[fieldName],
+              collectionType: source.displayName,
+            });
+          });
+        }
+      }
 
-      setPdfData(formatDocs(pdfSnapshot, "pdf"));
-      setPhotoData(formatDocs(imageSnapshot, "image"));
-      setLinkData(formatDocs(linkSnapshot, "link"));
-      setTextData(formatDocs(textSnapshot, "text"));
+      setPdfData(allData.pdf);
+      setPhotoData(allData.image);
+      setLinkData(allData.link);
+      setTextData(allData.text);
     } catch (error) {
       console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
     }
   }, [month]);
 
@@ -82,7 +89,6 @@ const AdminMonthDetails = () => {
   }, [fetchData]);
 
   const handleAddData = (newData) => {
-    // تحديد اسم الحقل بناءً على selectedData
     const fieldName =
       selectedData === "image"
         ? "image"
@@ -98,8 +104,8 @@ const AdminMonthDetails = () => {
       [fieldName]: newData[fieldName],
       size: newData.size,
       uploadDate: newData.uploadDate,
-      status: { edited: false, deleted: false, downloaded: false },
       content: newData[fieldName],
+      collectionType: newData.collectionType || "Month Details",
     };
 
     switch (selectedData) {
@@ -122,13 +128,14 @@ const AdminMonthDetails = () => {
     fetchData();
   };
 
-  const handleEdit = async (id, currentName) => {
+  const handleEdit = async (id, currentName, collectionType) => {
     const newName = prompt("Enter new name:", currentName);
     if (newName && newName !== currentName) {
-      // تحقق من وجود وثيقة بنفس الاسم الجديد
+      const collectionName =
+        collectionType === "Month Details" ? "months" : "Months of Pregnancy";
       const newDocRef = doc(
         db,
-        "months",
+        collectionName,
         month.toLowerCase(),
         selectedData,
         newName.toLowerCase()
@@ -137,15 +144,14 @@ const AdminMonthDetails = () => {
 
       if (docSnap.exists()) {
         alert(
-          `A document with the name "${newName}" already exists. Please choose a different name.`
+          `A document with the name "${newName}" already exists in ${collectionType}. Please choose a different name.`
         );
         return;
       }
 
-      // إنشاء وثيقة جديدة بالاسم الجديد
       const oldDocRef = doc(
         db,
-        "months",
+        collectionName,
         month.toLowerCase(),
         selectedData,
         id
@@ -158,15 +164,22 @@ const AdminMonthDetails = () => {
         status: { ...oldData.status, edited: true },
       });
 
-      // حذف الوثيقة القديمة
       await deleteDoc(oldDocRef);
       fetchData();
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id, collectionType) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
-      const ref = doc(db, "months", month.toLowerCase(), selectedData, id);
+      const collectionName =
+        collectionType === "Month Details" ? "months" : "Months of Pregnancy";
+      const ref = doc(
+        db,
+        collectionName,
+        month.toLowerCase(),
+        selectedData,
+        id
+      );
       try {
         await deleteDoc(ref);
         fetchData();
@@ -177,9 +190,20 @@ const AdminMonthDetails = () => {
   };
 
   const handleDownload = async (id, content) => {
-    if (selectedData !== "text") {
+    if (selectedData !== "text" && content) {
       window.open(content, "_blank");
-      const ref = doc(db, "months", month.toLowerCase(), selectedData, id);
+      const collectionName =
+        currentData.find((item) => item.id === id)?.collectionType ===
+        "Month Details"
+          ? "months"
+          : "Months of Pregnancy";
+      const ref = doc(
+        db,
+        collectionName,
+        month.toLowerCase(),
+        selectedData,
+        id
+      );
       await updateDoc(ref, { "status.downloaded": true });
       fetchData();
     }
@@ -195,7 +219,6 @@ const AdminMonthDetails = () => {
         ? photoData
         : textData;
 
-    // تحديد اسم الحقل للتصدير
     const fieldName =
       selectedData === "image"
         ? "image"
@@ -205,13 +228,13 @@ const AdminMonthDetails = () => {
         ? "url"
         : "file";
 
-    const csv = ["Name,Size,Upload Date,Content"]
+    const csv = ["Name,Collection,Size,Upload Date,Content"]
       .concat(
         currentData.map(
           (item) =>
-            `${item.name},${item.size},${item.uploadDate},${
-              item[fieldName] || item.content || ""
-            }`
+            `${item.name},${item.collectionType},${item.size},${
+              item.uploadDate
+            },${item[fieldName] || item.content || ""}`
         )
       )
       .join("\n");
@@ -314,7 +337,9 @@ const AdminMonthDetails = () => {
       </div>
 
       <div className="p-[3px] bg-gradient-to-r from-[#94c3fc] to-[#CBF3FF] w-full rounded-xl overflow-x-auto">
-        {sortedData.length > 0 ? (
+        {loading ? (
+          <p className="p-4 text-center text-gray-500">Loading...</p>
+        ) : sortedData.length > 0 ? (
           <DataDisplay
             data={sortedData}
             type={selectedData}

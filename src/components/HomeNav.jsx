@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { auth, db } from "@/firebase";
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-
+import Swal from "sweetalert2";
 import logo from "@/assets/logo.png";
 import navIcon1 from "@/assets/navIcon1.png";
 import navIcon2 from "@/assets/navIcon2.png";
@@ -63,16 +63,42 @@ const HomeNav = ({ closeNav }) => {
   // دالة تسجيل الخروج
   const handleSignOut = async () => {
     try {
-      const userId = auth.currentUser?.uid;
-      if (userId) {
-        await setUserUnactive(userId);
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "Do you want to sign out of your account?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, sign out",
+      });
+
+      if (result.isConfirmed) {
+        const userId = auth.currentUser?.uid;
+        if (userId) {
+          await setUserUnactive(userId);
+        }
+        await signOut(auth);
+        console.log("User signed out");
+        navigate("/signin");
+        closeNav();
+        Swal.fire({
+          title: "Signed Out!",
+          text: "You have been successfully signed out.",
+          icon: "success",
+          confirmButtonColor: "#3085d6",
+          confirmButtonText: "OK",
+        });
       }
-      await signOut(auth);
-      console.log("User signed out");
-      navigate("/signin");
-      closeNav();
     } catch (error) {
       console.error("Error signing out:", error);
+      Swal.fire({
+        title: "Error!",
+        text: `Failed to sign out: ${error.message}`,
+        icon: "error",
+        confirmButtonColor: "#d33",
+        confirmButtonText: "OK",
+      });
     }
   };
 

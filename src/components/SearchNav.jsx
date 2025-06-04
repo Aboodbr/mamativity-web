@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "./ui/input";
 import { auth, db } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -7,7 +7,10 @@ import { onAuthStateChanged } from "firebase/auth";
 
 const SearchNav = ({ onSearch }) => {
   const [query, setQuery] = useState("");
-  const [firstName, setFirstName] = useState(""); // الاسم الأول فقط
+  const [userData, setUserData] = useState({
+    firstName: "",
+    lastName: "",
+  });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -15,7 +18,10 @@ const SearchNav = ({ onSearch }) => {
         try {
           const userDoc = await getDoc(doc(db, "users", user.uid));
           if (userDoc.exists()) {
-            setFirstName(userDoc.data().firstName); // حفظ الاسم
+            setUserData({
+              firstName: userDoc.data().firstName || "",
+              lastName: userDoc.data().lastName || "",
+            });
           }
         } catch (error) {
           console.error("خطأ أثناء جلب الاسم:", error);
@@ -47,23 +53,13 @@ const SearchNav = ({ onSearch }) => {
             />
           </div>
           <div className="flex absolute top-6 right-5 items-center gap-4 ml-4">
-            <button className="relative">
-              <Bell className="h-6 w-6 text-gray-600" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
-                2
-              </span>
-            </button>
-            <div className="flex items-center gap-3">
-              <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-zjfmNXgjnY9Y0b3STIS6HSx5wwsSM3.png"
-                alt="Profile"
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
-              <div className="hidden md:block">
-                <p className="font-semibold">{firstName || "..."}</p>
-              </div>
+            <div className="flex flex-row items-center space-x-2">
+              <p className="font-extrabold text-xl text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                {userData.firstName || "..."}
+              </p>
+              <p className="font-semibold text-lg text-gray-700">
+                {userData.lastName || ""}
+              </p>
             </div>
           </div>
         </div>

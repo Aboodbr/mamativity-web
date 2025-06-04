@@ -16,6 +16,7 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [collectionType, setCollectionType] = useState("Month Details");
 
   const isValidUrl = (url) => {
     const urlPattern =
@@ -45,6 +46,7 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
     setContent("");
     setImagePreview(null);
     setError("");
+    setCollectionType("Month Details");
   };
 
   const handleSubmit = async (e) => {
@@ -61,10 +63,12 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
         throw new Error("Please enter a name for the section.");
       }
 
-      // تحقق من وجود وثيقة بنفس الاسم في المجموعة الفرعية
+      // Determine the collection based on dropdown selection
+      const collectionName =
+        collectionType === "Month Details" ? "months" : "Months of Pregnancy";
       const dataDocRef = doc(
         db,
-        "months",
+        collectionName,
         month.toLowerCase(),
         selectedData,
         name.toLowerCase()
@@ -73,7 +77,7 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
 
       if (docSnap.exists()) {
         throw new Error(
-          `A document with the name "${name}" already exists. Please choose a different name.`
+          `A document with the name "${name}" already exists in ${collectionType}. Please choose a different name.`
         );
       }
 
@@ -104,7 +108,7 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
         throw new Error("Please select a file or enter content.");
       }
 
-      // تحديد اسم الحقل بناءً على نوع البيانات
+      // Define the field name based on data type
       const fieldName =
         selectedData === "image"
           ? "image"
@@ -116,22 +120,22 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
 
       const newData = {
         createdAt: serverTimestamp(),
-        [fieldName]: fileUrl, // الحقل المتغير (image, text, url, file)
+        [fieldName]: fileUrl,
         size: fileSize,
         uploadDate: new Date().toLocaleDateString("en-US"),
       };
 
       console.log("Data to be submitted:", newData);
 
-      // التأكد من وجود وثيقة الشهر في مجموعة months
-      const monthDocRef = doc(db, "months", month.toLowerCase());
+      // Ensure the month document exists in the selected collection
+      const monthDocRef = doc(db, collectionName, month.toLowerCase());
       await setDoc(
         monthDocRef,
         { createdAt: serverTimestamp() },
         { merge: true }
       );
 
-      // تخزين البيانات في months/{month}/{selectedData}/{name}
+      // Store the data in the appropriate collection
       await setDoc(dataDocRef, newData);
 
       console.log("Document added with name:", name);
@@ -183,6 +187,21 @@ const AddDataModal = ({ isOpen, onClose, selectedData, onAddData }) => {
           {error && <p className="text-red-500 mb-4">{error}</p>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Data Category
+              </label>
+              <select
+                value={collectionType}
+                onChange={(e) => setCollectionType(e.target.value)}
+                className="w-full border p-2 rounded"
+                required
+              >
+                <option value="Month Details">Month Details</option>
+                <option value="Months of Pregnancy">Months of Pregnancy</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">
                 Section Name
